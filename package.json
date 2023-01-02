@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "App Shell Monorepo",
   "scripts": {
-    "prep-husky": "pnpm exec husky install #&& pnpm exec husky add .husky/pre-commit 'npx lint-staged'"
+    "prep-husky": "pnpm exec husky install"
   },
   "engines": {
     "node": ">=16.0.0"
