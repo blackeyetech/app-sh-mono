@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json" /* Our base tsconfig */,
+
+  "compilerOptions": {
+    "module": "ESNext" /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */,
+    "outDir": "./dist" /* Redirect output structure to the directory. */,
+    "rootDir": ".",
+    "paths": {}
+  },
+
+  "include": ["src/**/*.ts"],
+  "ts-node": {
+    "esm": true
+  }
+}

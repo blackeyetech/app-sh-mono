@@ -1,0 +1,56 @@
+{
+  "version": "0.0.0",
+  "name": "app-sh",
+  "description": "App Shell",
+  "exports": {
+    "node": {
+      "require": "./dist/shell.cjs",
+      "import": "./dist/shell.mjs"
+    }
+  },
+  "files": [
+    "dist/shell.mjs",
+    "dist/shell.cjs",
+    "dist/types/*"
+  ],
+  "types": "./dist/types/shell.d.ts",
+  "scripts": {
+    "rollup": "rollup -c rollup.config.mjs",
+    "build-dev": "tsc --sourceMap && npm run rollup",
+    "build-prod": "npm run clean && tsc && npm run rollup",
+    "format-ts": "prettier --write 'src/**/*.ts'",
+    "format-js": "prettier --write 'dist/**/*.{js,ts}'",
+    "format-misc": "prettier --write '**/*.{json,md,yaml}'",
+    "install-bin": "npm install -g $(npm pack . | tail -1)",
+    "test": "echo \"No tests\" && exit 0",
+    "clean": "rm -rf ./dist",
+    "prepare": "npm run clean && npm run build-prod",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "Application",
+    "Shell",
+    "Framework"
+  ],
+  "author": "Black Eye Technology",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-replace": "^5.0.2",
+    "@rollup/plugin-terser": "^0.2.1",
+    "@types/node": "^16",
+    "rollup": "^3.9.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.5",
+    "dotenv": "^16.0.1",
+    "path-to-regexp": "^6.2.1",
+    "undici": "^5.10.0",
+    "zod": "^3.19.1"
+  }
+}

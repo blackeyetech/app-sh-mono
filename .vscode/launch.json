@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "app-sh",
+      "cwd": "${workspaceFolder}/app-sh",
+      "runtimeExecutable": "node",
+      "env": { "CNA_HTTP_HEALTHCHECK_INTERFACE": "lo" },
+      "runtimeArgs": ["dist/test.js", "--log_level", "trace"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test - mjs",
+      "cwd": "${workspaceFolder}/testing",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["src/main.mjs", "-x=Y"]
+    }
+  ]
+}

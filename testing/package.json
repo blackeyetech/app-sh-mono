@@ -1,0 +1,19 @@
+{
+  "name": "testing",
+  "version": "0.0.0",
+  "description": "",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc --project tsconfig.mjs.json",
+    "test": "ts-node src/main"
+  },
+  "prettier": {
+    "trailingComma": "all"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "app-sh": "workspace:^0.0.0"
+  }
+}
