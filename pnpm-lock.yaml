@@ -54,7 +54,7 @@ importers:
 
   testing:
     specifiers:
-      app-sh: workspace:^0.0.0
+      app-sh: workspace:^1.0.0
     dependencies:
       app-sh: link:../app-sh
 
