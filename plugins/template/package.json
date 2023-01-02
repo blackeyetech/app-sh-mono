@@ -1,19 +1,19 @@
 {
-  "version": "1.0.0",
-  "name": "app-sh",
-  "description": "App Shell",
+  "version": "0.0.0",
+  "name": "@app-sh/template",
+  "description": "DESCRIPTION",
   "exports": {
     "node": {
-      "require": "./dist/shell.cjs",
-      "import": "./dist/shell.mjs"
+      "require": "./dist/plugin.cjs",
+      "import": "./dist/plugin.mjs"
     }
   },
   "files": [
-    "dist/shell.mjs",
-    "dist/shell.cjs",
+    "dist/plugin.mjs",
+    "dist/plugin.cjs",
     "dist/types/*"
   ],
-  "types": "./dist/types/shell.d.ts",
+  "types": "./dist/types/plugin.d.ts",
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",
@@ -33,15 +33,11 @@
   "keywords": [
     "Application",
     "Shell",
-    "Framework"
+    "Plugin"
   ],
   "author": "Black Eye Technology",
   "license": "MIT",
   "dependencies": {
-    "dayjs": "^1.11.5",
-    "dotenv": "^16.0.1",
-    "path-to-regexp": "^6.2.1",
-    "undici": "^5.10.0",
-    "zod": "^3.19.1"
+    "app-sh": "workspace:^1.0.0"
   }
 }
