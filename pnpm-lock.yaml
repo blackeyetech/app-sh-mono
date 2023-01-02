@@ -46,6 +46,12 @@ importers:
       undici: 5.13.0
       zod: 3.19.1
 
+  plugins/http-man:
+    specifiers:
+      app-sh: workspace:^1.0.0
+    dependencies:
+      app-sh: link:../../app-sh
+
   plugins/template:
     specifiers:
       app-sh: workspace:^1.0.0
