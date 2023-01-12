@@ -1,5 +1,4 @@
 packages:
   - "app-sh"
   - "testing"
-  - "plugins/http-man"
   - "plugins/template"

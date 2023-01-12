@@ -1,5 +1,5 @@
 // imports here
-import { ShellPlugin, ShellPluginConfig } from "app-sh";
+import { AppShPlugin, AppShPluginConfig } from "./app-sh.js";
 
 import * as http from "node:http";
 import * as os from "node:os";
@@ -13,8 +13,9 @@ export interface HttpConfig {
   keepAliveTimeout?: number;
   headerTimeout?: number;
 
-  healthcheckPort?: number;
-  healthcheckInterface?: string;
+  networkInterface?: string;
+  networkPort?: number;
+
   healthcheckPath?: string;
   healthcheckGoodRes?: number;
   healthcheckBadRes?: number;
@@ -24,8 +25,9 @@ export interface HttpConfig {
 const CFG_HTTP_KEEP_ALIVE_TIMEOUT = "HTTP_KEEP_ALIVE_TIMEOUT";
 const CFG_HTTP_HEADER_TIMEOUT = "HTTP_HEADER_TIMEOUT";
 
-const CFG_HTTP_HEALTHCHECK_PORT = "HTTP_HEALTHCHECK_PORT";
-const CFG_HTTP_HEALTHCHECK_INTERFACE = "HTTP_HEALTHCHECK_INTERFACE";
+const CFG_HTTP_NETWORK_INTERFACE = "HTTP_NETWORK_INTERFACE";
+const CFG_HTTP_NETWORK_PORT = "HTTP_NETWORK_PORT";
+
 const CFG_HTTP_HEALTHCHECK_PATH = "HTTP_HEALTHCHECK_PATH";
 const CFG_HTTP_HEALTHCHECK_GOOD_RES = "HTTP_HEALTHCHECK_GOOD_RES";
 const CFG_HTTP_HEALTHCHECK_BAD_RES = "HTTP_HEALTHCHECK_BAD_RES";
@@ -35,29 +37,31 @@ const DEFAULT_HTTP_CONFIG = {
   keepAliveTimeout: 65000,
   headerTimeout: 66000,
 
-  healthcheckPort: 8080,
-  healthcheckInterface: "",
+  networkInterface: "",
+  networkPort: 8080,
+
   healthcheckPath: "/healthcheck",
   healthcheckGoodRes: 200,
   healthcheckBadRes: 503,
 };
 
 // HttpMan class here
-export class HttpMan extends ShellPlugin {
+export class HttpMan extends AppShPlugin {
   private _middlewareList: Middleware[];
 
   private _httpKeepAliveTimeout: number;
   private _httpHeaderTimeout: number;
 
-  private _healthcheckPort: number;
-  private _healthcheckInterface: string;
+  private _networkInterface: string;
+  private _networkPort: number;
+
   private _healthCheckPath: string;
   private _healthCheckGoodResCode: number;
   private _healthCheckBadResCode: number;
 
-  private _healthcheckServer?: http.Server;
+  private _server?: http.Server;
 
-  constructor(extConfig: ShellPluginConfig, passedConfig: HttpConfig = {}) {
+  constructor(extConfig: AppShPluginConfig, passedConfig: HttpConfig = {}) {
     super(extConfig);
 
     let config = {
@@ -67,16 +71,6 @@ export class HttpMan extends ShellPlugin {
 
     this._middlewareList = [];
 
-    this._healthcheckInterface = this.getConfigStr(
-      CFG_HTTP_HEALTHCHECK_INTERFACE,
-      config.healthcheckInterface,
-    );
-
-    this._healthcheckPort = this.getConfigNum(
-      CFG_HTTP_HEALTHCHECK_PORT,
-      config.healthcheckPort,
-    );
-
     this._httpKeepAliveTimeout = this.getConfigNum(
       CFG_HTTP_KEEP_ALIVE_TIMEOUT,
       config.keepAliveTimeout,
@@ -85,6 +79,16 @@ export class HttpMan extends ShellPlugin {
     this._httpHeaderTimeout = this.getConfigNum(
       CFG_HTTP_HEADER_TIMEOUT,
       config.headerTimeout,
+    );
+
+    this._networkInterface = this.getConfigStr(
+      CFG_HTTP_NETWORK_INTERFACE,
+      config.networkInterface,
+    );
+
+    this._networkPort = this.getConfigNum(
+      CFG_HTTP_NETWORK_PORT,
+      config.networkPort,
     );
 
     this._healthCheckPath = this.getConfigStr(
@@ -105,7 +109,7 @@ export class HttpMan extends ShellPlugin {
 
   // Private methods here
   private setupHealthcheck(): void {
-    if (this._healthcheckInterface.length === 0) {
+    if (this._networkInterface.length === 0) {
       this.startup(
         "No HTTP interface specified for healthcheck endpoint - healthcheck disabled!",
       );
@@ -114,57 +118,53 @@ export class HttpMan extends ShellPlugin {
 
     this.startup("Initialising healthcheck HTTP endpoint ...");
 
-    this.startup(`Finding IP for interface (${this._healthcheckInterface})`);
+    this.startup(`Finding IP for interface (${this._networkInterface})`);
 
     let ifaces = os.networkInterfaces();
     this.startup("Interfaces on host: %j", ifaces);
 
-    if (ifaces[this._healthcheckInterface] === undefined) {
+    if (ifaces[this._networkInterface] === undefined) {
       throw new Error(
-        `${this._healthcheckInterface} is not an interface on this server`,
+        `${this._networkInterface} is not an interface on this server`,
       );
     }
 
     let ip = "";
 
     // Search for the first I/F with a family of type IPv4
-    let found = ifaces[this._healthcheckInterface]?.find(
+    let found = ifaces[this._networkInterface]?.find(
       (i) => i.family === "IPv4",
     );
     if (found !== undefined) {
       ip = found.address;
+      this.startup(`Found IP (${ip}) for interface ${this._networkInterface}`);
       this.startup(
-        `Found IP (${ip}) for interface ${this._healthcheckInterface}`,
-      );
-      this.startup(
-        `Will listen on interface ${this._healthcheckInterface} (IP: ${ip})`,
+        `Will listen on interface ${this._networkInterface} (IP: ${ip})`,
       );
     }
 
     if (ip.length === 0) {
       throw new Error(
-        `${this._healthcheckInterface} is not an interface on this server`,
+        `${this._networkInterface} is not an interface on this server`,
       );
     }
 
-    this.startup(
-      `Attempting to listen on (http://${ip}:${this._healthcheckPort})`,
-    );
+    this.startup(`Attempting to listen on (http://${ip}:${this._networkPort})`);
 
-    this._healthcheckServer = http
+    this._server = http
       .createServer((req, res) => this.healthcheckCallback(req, res))
-      .listen(this._healthcheckPort, ip);
+      .listen(this._networkPort, ip);
 
     // NOTE: The default node keep alive is 5 secs. This needs to be set
     // higher then any load balancers in front of this CNA
 
-    this._healthcheckServer.keepAliveTimeout = this._httpKeepAliveTimeout;
+    this._server.keepAliveTimeout = this._httpKeepAliveTimeout;
 
     // NOTE: There is a potential race condition and the recommended
     // solution is to make the header timeouts greater then the keep alive
     // timeout. See - https://github.com/nodejs/node/issues/27363
 
-    this._healthcheckServer.headersTimeout = this._httpHeaderTimeout;
+    this._server.headersTimeout = this._httpHeaderTimeout;
 
     this.startup("Now listening. Healthcheck endpoint enabled!");
   }
@@ -204,9 +204,9 @@ export class HttpMan extends ShellPlugin {
   }
 
   async stop(): Promise<void> {
-    if (this._healthcheckServer !== undefined) {
+    if (this._server !== undefined) {
       this.shutdown("Closing healthcheck endpoint port now ...");
-      this._healthcheckServer.close();
+      this._server.close();
       this.shutdown("Port closed");
     }
 

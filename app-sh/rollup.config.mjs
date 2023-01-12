@@ -6,13 +6,18 @@ import terser from "@rollup/plugin-terser";
 
 import { readFileSync } from "fs";
 
+// Consts here
+
+// Load the package.json so we can get the version
 const pkg = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
 
+// We need to know if we are building for prod or dev
 const NODE_ENV =
   process.env.NODE_ENV === undefined ? "development" : process.env.NODE_ENV;
 
+// Setup the plugins here
 let plugins = [
   replace({
     preventAssignment: true,
@@ -29,18 +34,18 @@ if (NODE_ENV !== "development") {
 
 export default [
   {
-    input: "dist/shell.js",
+    input: "dist/app-sh.js",
     output: {
-      file: "dist/shell.mjs",
+      file: "dist/app-sh.mjs",
       format: "es",
     },
 
     plugins,
   },
   {
-    input: "dist/shell.js",
+    input: "dist/app-sh.js",
     output: {
-      file: "dist/shell.cjs",
+      file: "dist/app-sh.cjs",
       format: "cjs",
     },
 

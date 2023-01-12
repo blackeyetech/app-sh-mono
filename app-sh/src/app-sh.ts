@@ -2,7 +2,6 @@
 import { Logger, LogConfig, LogLevel } from "./logger.js";
 import { LoggerConsole } from "./logger-console.js";
 import { ConfigMan, ConfigTypes } from "./config-man.js";
-// import { ShellPlugin, ShellPluginConfig } from "./shell-plugin.js";
 
 import { Pool, Dispatcher } from "undici";
 
@@ -23,7 +22,7 @@ const CFG_LOG_TIMESTAMP = "LOG_TIMESTAMP";
 const CFG_LOG_TIMESTAMP_FORMAT = "LOG_TIMESTAMP_FORMAT";
 
 // Default configs here
-const DEFAULT_SHELL_CONFIG = {
+const DEFAULT_APP_SH_CONFIG = {
   appVersion: "N/A",
   log: {
     level: LogLevel.INFO,
@@ -50,7 +49,7 @@ const NODE_ENV =
 const LOGGER_APP_NAME = "App";
 
 // Interfaces here
-export interface ShellConfig {
+export interface AppShConfig {
   name: string;
   appVersion?: string;
   log?: {
@@ -87,8 +86,8 @@ export interface HttpReqOptions {
   bearerToken?: string;
 }
 
-// Shell class here
-export class Shell {
+// AppSh class here
+export class AppSh {
   // Properties here
   private readonly _name: string;
   private readonly _appVersion: string;
@@ -98,20 +97,20 @@ export class Shell {
 
   private _logger: Logger;
 
-  private _plugins: ShellPlugin[];
+  private _plugins: AppShPlugin[];
   private _httpReqPools: { [key: string]: Pool };
 
   // Constructor here
-  constructor(passedConfig: ShellConfig) {
+  constructor(passedConfig: AppShConfig) {
     // Setup all of the defaults
     let config = {
       name: passedConfig.name,
       appVersion:
         passedConfig.appVersion === undefined
-          ? DEFAULT_SHELL_CONFIG.appVersion
+          ? DEFAULT_APP_SH_CONFIG.appVersion
           : passedConfig.appVersion,
       log: {
-        ...DEFAULT_SHELL_CONFIG.log,
+        ...DEFAULT_APP_SH_CONFIG.log,
         ...passedConfig.log,
       },
     };
@@ -188,7 +187,7 @@ export class Shell {
     // Start the logger now
     this._logger.start();
 
-    this.startup(`Shell version (${this._appShVersion}) created!`);
+    this.startup(`App Shell version (${this._appShVersion}) created!`);
   }
 
   // Protected methods (that should be overridden) here
@@ -251,7 +250,6 @@ export class Shell {
   async init(testing: boolean = false) {
     this.startup("Initialising ...");
 
-    // this.startup(`CN-Shell Version (${CN_VERSION})`);
     this.startup(`App Version (${this._appVersion})`);
     this.startup(`NODE_ENV (${NODE_ENV})`);
 
@@ -398,7 +396,7 @@ export class Shell {
     this._logger.force(LOGGER_APP_NAME, ...args);
   }
 
-  addPlugin(ext: ShellPlugin): void {
+  addPlugin(ext: AppShPlugin): void {
     this.startup(`Adding extension ${ext.name}`);
     this._plugins.push(ext);
   }
@@ -583,26 +581,26 @@ export class Shell {
   }
 }
 
-// ShellPlugin code here
+// AppShPlugin code here
 
 // Interfaces here
-export interface ShellPluginConfig {
+export interface AppShPluginConfig {
   name: string;
-  shell: Shell;
+  appSh: AppSh;
 }
 
-// ShellPlugin class here
-export class ShellPlugin {
+// AppShPlugin class here
+export class AppShPlugin {
   // Properties here
   private _name: string;
-  private _shell: Shell;
+  private _appSh: AppSh;
 
   // Constructor here
-  constructor(config: ShellPluginConfig) {
+  constructor(config: AppShPluginConfig) {
     this._name = config.name;
-    this._shell = config.shell;
+    this._appSh = config.appSh;
 
-    this._shell.addPlugin(this);
+    this._appSh.addPlugin(this);
 
     this.startup("Initialising ...");
   }
@@ -638,7 +636,7 @@ export class ShellPlugin {
     options?: ConfigOptions,
   ): string {
     // This either returns a string or it throws
-    return <string>this._shell.configMan.get({
+    return <string>this._appSh.configMan.get({
       config,
       type: ConfigTypes.String,
       logTag: this._name,
@@ -653,7 +651,7 @@ export class ShellPlugin {
     options?: ConfigOptions,
   ): boolean {
     // This either returns a bool or it throws
-    return <boolean>this._shell.configMan.get({
+    return <boolean>this._appSh.configMan.get({
       config,
       type: ConfigTypes.Boolean,
       logTag: this._name,
@@ -668,7 +666,7 @@ export class ShellPlugin {
     options?: ConfigOptions,
   ): number {
     // This either returns a number or it throws
-    return <number>this._shell.configMan.get({
+    return <number>this._appSh.configMan.get({
       config,
       type: ConfigTypes.Number,
       logTag: this._name,
@@ -678,43 +676,43 @@ export class ShellPlugin {
   }
 
   fatal(...args: any): void {
-    this._shell.logger.fatal(this._name, ...args);
+    this._appSh.logger.fatal(this._name, ...args);
   }
 
   error(...args: any): void {
-    this._shell.logger.error(this._name, ...args);
+    this._appSh.logger.error(this._name, ...args);
   }
 
   warn(...args: any): void {
-    this._shell.logger.warn(this._name, ...args);
+    this._appSh.logger.warn(this._name, ...args);
   }
 
   info(...args: any): void {
-    this._shell.logger.info(this._name, ...args);
+    this._appSh.logger.info(this._name, ...args);
   }
 
   startup(...args: any): void {
-    this._shell.logger.startup(this._name, ...args);
+    this._appSh.logger.startup(this._name, ...args);
   }
 
   shutdown(...args: any): void {
-    this._shell.logger.shutdown(this._name, ...args);
+    this._appSh.logger.shutdown(this._name, ...args);
   }
 
   debug(...args: any): void {
-    this._shell.logger.debug(this._name, ...args);
+    this._appSh.logger.debug(this._name, ...args);
   }
 
   trace(...args: any): void {
-    this._shell.logger.trace(this._name, ...args);
+    this._appSh.logger.trace(this._name, ...args);
   }
 
   force(...args: any): void {
-    this._shell.logger.force(this._name, ...args);
+    this._appSh.logger.force(this._name, ...args);
   }
 
   createHttpReqPool(origin: string, passedOptions?: HttpReqPoolOptions): void {
-    this._shell.createHttpReqPool(origin, passedOptions);
+    this._appSh.createHttpReqPool(origin, passedOptions);
   }
 
   async httpReq(
@@ -722,6 +720,6 @@ export class ShellPlugin {
     path: string,
     passedOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
-    return this._shell.httpReq(origin, path, passedOptions);
+    return this._appSh.httpReq(origin, path, passedOptions);
   }
 }

@@ -1,8 +1,8 @@
 // let { Shell } = require("cn-shell");
-let { Shell, LogLevel } = require("app-sh");
+let { AppSh, LogLevel } = require("app-sh");
 
 (async () => {
-  let $ = new Shell({
+  let $ = new AppSh({
     name: "Test",
     log: { level: LogLevel.TRACE, timestampFormat: "" },
   });

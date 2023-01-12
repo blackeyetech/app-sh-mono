@@ -1,6 +1,6 @@
-import { Shell, LogLevel } from "app-sh";
+import { AppSh, LogLevel } from "app-sh";
 
-let sh = new Shell({
+let sh = new AppSh({
   name: "Test",
   log: { level: LogLevel.TRACE, timestampFormat: "" },
 });
@@ -19,3 +19,5 @@ sh.info("Number (%j)", n);
 let res = await sh.httpReq("https://google.com", "/search");
 
 sh.info("%j", res.body);
+let answer = await sh.question("How you doing?");
+sh.info("You are doing %s", answer);
