@@ -71,6 +71,8 @@ export interface HttpConfig {
 interface MethodListElement {
   matchFunc: MatchFunction<object>;
   callback: EndpointCallback;
+
+  middlewareList: Middleware[];
   options: EndpointOptions;
 }
 
@@ -79,6 +81,7 @@ type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 // Default configs here
 const DEFAULT_ENDPOINT_OPTIONS = {
   maxBodySize: 1024 * 1024,
+  middlewareList: [],
 };
 
 // Config consts here
@@ -272,6 +275,7 @@ export class HttpMan {
     this._server.headersTimeout = this._httpHeaderTimeout;
 
     // Now we need to add an endpoint for healthchecks
+    //NOTE: This being added BEFORE any middleware
     this.addEndpoint("GET", this._healthCheckPath, (req, res, details) =>
       this.healthcheckCallback(req, res, details),
     );
@@ -384,7 +388,7 @@ export class HttpMan {
           req,
           res,
           details,
-          this._middlewareList,
+          el.middlewareList,
           el.callback,
         );
       }
@@ -572,6 +576,11 @@ export class HttpMan {
     );
 
     // Finally add it to the list of callbacks
-    this._methodListMap[method].push({ matchFunc, callback, options });
+    this._methodListMap[method].push({
+      matchFunc,
+      callback,
+      options,
+      middlewareList: [...this._middlewareList, ...options.middlewareList],
+    });
   }
 }
