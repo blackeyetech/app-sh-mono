@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.1.1
+
+### Patch Changes
+
+- Now checking received body size
+
 ## 1.1.0
 
 ### Minor Changes

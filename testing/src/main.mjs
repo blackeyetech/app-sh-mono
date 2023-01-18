@@ -55,13 +55,15 @@ sh.info("XXX (%j)", n);
 
 sh.trace("Traced!");
 
-sh.httpMan.addHealthcheck(() => {
+let httpMan = sh.httpMan;
+
+httpMan.addHealthcheck(() => {
   sh.info("Helllo!!!");
   return true;
 });
 // sh.sleep(2);
 
-sh.httpMan.addMiddleware(async (req, res, details, next) => {
+httpMan.addMiddleware(async (req, res, details, next) => {
   let now = new Date().valueOf();
   sh.info("in the middle of one");
   await next();
@@ -101,7 +103,7 @@ sh.httpMan.addEndpoint(
     res.statusCode = 200;
     res.end();
   },
-  { zodInputValidator: User },
+  { zodInputValidator: User, maxBodySize: 512 },
 );
 
 sh.httpMan.addEndpoint(

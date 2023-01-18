@@ -306,7 +306,20 @@ export class HttpMan {
 
       // If we are here we found a callback - process it and stop looking
       let details: EndpointCallbackDetails = { url, params: result.params };
-      await this.processHttpReq(req, res, method, el, details);
+
+      // If the req method is POST/PUT/PATCH we need to get the body
+      if (method === "POST" || method === "PUT" || method === "PATCH") {
+        await this.processHttpReqBody(req, res, el, details);
+      } else {
+        // We don't need the body so kick off the middleware
+        await this.callMiddleware(
+          req,
+          res,
+          details,
+          this._middlewareList,
+          el.callback,
+        );
+      }
 
       found = true;
       break;
@@ -319,59 +332,63 @@ export class HttpMan {
     }
   }
 
-  private async processHttpReq(
+  private async processHttpReqBody(
     req: http.IncomingMessage,
     res: http.ServerResponse,
-    method: Method,
     el: MethodListElement,
     details: EndpointCallbackDetails,
   ) {
-    // If the req method is POST. PUT or PATCH we need to get the body
-    if (method === "POST" || method === "PUT" || method === "PATCH") {
-      // Store each data "chunk" we receive this array
-      let chunks: Buffer[] = [];
+    // Store each data "chunk" we receive this array
+    let chunks: Buffer[] = [];
+    let bodySize = 0;
 
-      // This event fires when there is a chunk of the body received
-      req.on("data", (chunk: Buffer) => {
+    // This event fires when there is a chunk of the body received
+    req.on("data", (chunk: Buffer) => {
+      bodySize += chunk.byteLength;
+
+      // maxBodySize has a default so it is always set
+      if (bodySize >= <number>el.options.maxBodySize) {
+        // The body is too big so flag to user and remvoe all of the listeners
+        res.statusCode = 400;
+        res.write(`Body length greater than ${el.options.maxBodySize} bytes`);
+        res.end();
+
+        // May be overkill but do it anyway
+        req.removeAllListeners("data");
+        req.removeAllListeners("end");
+      } else {
         chunks.push(chunk);
-      });
+      }
+    });
 
-      // This event fires when we have received all of the body
-      req.on("end", async () => {
-        details.body = Buffer.concat(chunks);
+    // This event fires when we have received all of the body
+    req.on("end", async () => {
+      // Set the body to the raw
+      details.body = Buffer.concat(chunks);
 
-        let bodyOk = true;
+      let receivedBody = true;
 
-        details.jsonBody = await this.checkForJsonBody(req, el, details).catch(
-          (e) => {
-            // Flag there was an error
-            res.statusCode = 400;
-            res.write(e.toString());
-            res.end();
+      details.jsonBody = await this.checkForJsonBody(req, el, details).catch(
+        (e) => {
+          // Flag to the user there was an error
+          res.statusCode = 400;
+          res.write(e.toString());
+          res.end();
 
-            bodyOk = false;
-          },
-        );
-
-        if (bodyOk) {
-          await this.callMiddleware(
-            req,
-            res,
-            details,
-            this._middlewareList,
-            el.callback,
-          );
-        }
-      });
-    } else {
-      await this.callMiddleware(
-        req,
-        res,
-        details,
-        this._middlewareList,
-        el.callback,
+          receivedBody = false;
+        },
       );
-    }
+
+      if (receivedBody) {
+        await this.callMiddleware(
+          req,
+          res,
+          details,
+          this._middlewareList,
+          el.callback,
+        );
+      }
+    });
   }
 
   private async checkForJsonBody(
@@ -381,7 +398,7 @@ export class HttpMan {
   ): Promise<unknown> {
     // Before we do anything make sure there is a body!
     if (details.body === undefined || details.body.length === 0) {
-      // If there is no body and there is an input validator
+      // Chcek for an input validator
       if (el.options.zodInputValidator !== undefined) {
         // Run the validator and let it complain to the user
         let data = el.options.zodInputValidator.safeParse(undefined);
@@ -392,6 +409,7 @@ export class HttpMan {
           throw new Error(errMessage);
         }
       }
+
       return undefined;
     }
 
@@ -415,7 +433,7 @@ export class HttpMan {
               "Encountered an error when parsing the body of (%s) request on path (%s) - (%s)",
               req.method,
               details.url.toString(),
-              details.body,
+              details.body.length > 512 ? "Body to long ..." : details.body,
             );
 
             // Set the error message you want to return
