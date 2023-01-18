@@ -80,8 +80,13 @@ export class ConfigMan {
     // Ignore the first 2 params (node bin and executable file)
     let cliParams = process.argv.slice(2);
 
-    // Convert to lowercase, replace underscores with dashes and prepend "--"
+    // The convention used for config params on the command line is:
+    // Convert to lowercase, replace '_' with '-' and prepend "--"
     let cliParam = `--${options.config.toLowerCase().replaceAll("_", "-")}`;
+
+    // Command line flags are just prepended use a '-'
+    let cmdLineFlag =
+      options.cmdLineFlag !== undefined ? `-${options.cmdLineFlag}` : "";
 
     // If the param/flag is assigned a value on the cli it has the format:
     //   --param=value or -flag=value
@@ -96,7 +101,7 @@ export class ConfigMan {
       // Look for param and an assigned value or cmd line flag and an assigned
       // value or cmd line flag and no assigned value
       regExp = new RegExp(
-        `^${cliParam}=(.+)$|^-${options.cmdLineFlag}$|^-${options.cmdLineFlag}=(.+)$`,
+        `^${cliParam}=(.+)$|^${cmdLineFlag}=(.+)$|^${cmdLineFlag}$`,
       );
     }
 
@@ -112,7 +117,8 @@ export class ConfigMan {
         continue;
       }
 
-      // if a value was supplied it will either be match[1] OR match[2]
+      // if a value was supplied it will either be match[1] => parm OR
+      // match[2] => cmd line flag
       if (match[1] !== undefined) {
         // This means we found the param
         strValue = match[1];
@@ -120,11 +126,11 @@ export class ConfigMan {
       } else if (match.length > 2 && match[2] !== undefined) {
         // This means we found the flag and it was asssigned a value
         strValue = match[2];
-        paramOrFlag = `-${options.cmdLineFlag}`;
+        paramOrFlag = cmdLineFlag;
       } else {
         // This means we found the flag and it was not assigned a value
         strValue = "Y";
-        paramOrFlag = `-${options.cmdLineFlag}`;
+        paramOrFlag = cmdLineFlag;
       }
 
       // We found it, now lets check if we can or should log that we found it
@@ -146,11 +152,11 @@ export class ConfigMan {
   }
 
   // Public methods here
-  get(passedOptions: ConfigManOptions): string | number | boolean {
+  get(configOptions: ConfigManOptions): string | number | boolean {
     // Setup the defaults
     let options: ConfigManOptions = {
       ...DEFAULT_CONFIG_OPTIONS,
-      ...passedOptions,
+      ...configOptions,
     };
 
     // Check the CLI first, i.e. CLI has higher precedence then env vars

@@ -16,7 +16,7 @@
       "name": "test - mjs",
       "cwd": "${workspaceFolder}/testing",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["src/main.mjs", "-x=Y"]
+      "runtimeArgs": ["src/main.mjs", "--xxx=2"]
     }
   ]
 }

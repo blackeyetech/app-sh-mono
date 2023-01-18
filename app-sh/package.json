@@ -17,7 +17,7 @@
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",
-    "build-prod": "npm run clean && tsc && npm run rollup",
+    "build-prod": "npm run clean && tsc && NODE_ENV=production npm run rollup",
     "format-ts": "prettier --write 'src/**/*.ts'",
     "format-js": "prettier --write 'dist/**/*.{js,ts}'",
     "format-misc": "prettier --write '**/*.{json,md,yaml}'",
@@ -40,6 +40,8 @@
   "dependencies": {
     "dayjs": "^1.11.5",
     "dotenv": "^16.0.1",
-    "undici": "^5.10.0"
+    "path-to-regexp": "^6.2.1",
+    "undici": "^5.10.0",
+    "zod": "^3.20.2"
   }
 }

@@ -3,11 +3,27 @@ import { Logger, LogConfig, LogLevel } from "./logger.js";
 import { LoggerConsole } from "./logger-console.js";
 import { ConfigMan, ConfigTypes } from "./config-man.js";
 
+import {
+  HttpMan,
+  Middleware,
+  EndpointCallback,
+  EndpointCallbackDetails,
+  z,
+} from "./http-man";
+
 import { Pool, Dispatcher } from "undici";
 
 import * as readline from "node:readline";
 
-export { Logger, LogLevel, ConfigTypes };
+export {
+  Logger,
+  LogLevel,
+  ConfigTypes,
+  Middleware,
+  EndpointCallback,
+  EndpointCallbackDetails,
+  z,
+};
 
 // Interfaces here
 export interface ConfigOptions {
@@ -24,11 +40,14 @@ const CFG_LOG_TIMESTAMP_FORMAT = "LOG_TIMESTAMP_FORMAT";
 // Default configs here
 const DEFAULT_APP_SH_CONFIG = {
   appVersion: "N/A",
-  log: {
-    level: LogLevel.INFO,
-    timestamp: false,
-    timestampFormat: "ISO",
-  },
+  catchExceptions: false,
+  exitOnUnhandledExceptions: false,
+
+  logLevel: LogLevel.INFO,
+  logTimestamp: false,
+  logTimestampFormat: "ISO",
+
+  enableHttpMan: true,
 };
 
 const DEFAULT_QUESTION_OPTIONS = {
@@ -50,14 +69,16 @@ const LOGGER_APP_NAME = "App";
 
 // Interfaces here
 export interface AppShConfig {
-  name: string;
   appVersion?: string;
-  log?: {
-    logger?: Logger;
-    level?: LogLevel;
-    timestamp?: boolean;
-    timestampFormat?: string;
-  };
+  catchExceptions?: boolean;
+  exitOnUnhandledExceptions?: boolean;
+
+  logger?: Logger;
+  logLevel?: LogLevel;
+  logTimestamp?: boolean;
+  logTimestampFormat?: string;
+
+  enableHttpMan?: boolean;
 }
 
 export interface QuestionOptions {
@@ -89,7 +110,6 @@ export interface HttpReqOptions {
 // AppSh class here
 export class AppSh {
   // Properties here
-  private readonly _name: string;
   private readonly _appVersion: string;
   private readonly _appShVersion: string;
 
@@ -100,41 +120,35 @@ export class AppSh {
   private _plugins: AppShPlugin[];
   private _httpReqPools: { [key: string]: Pool };
 
+  private _httpMan?: HttpMan;
+
   // Constructor here
-  constructor(passedConfig: AppShConfig) {
+  constructor(appShConfig: AppShConfig) {
     // Setup all of the defaults
     let config = {
-      name: passedConfig.name,
-      appVersion:
-        passedConfig.appVersion === undefined
-          ? DEFAULT_APP_SH_CONFIG.appVersion
-          : passedConfig.appVersion,
-      log: {
-        ...DEFAULT_APP_SH_CONFIG.log,
-        ...passedConfig.log,
-      },
+      ...DEFAULT_APP_SH_CONFIG,
+      ...appShConfig,
     };
 
     // NOTE: APP_SH_VERSION is replaced with package.json#version by a
     // rollup plugin at build time
     this._appShVersion = "APP_SH_VERSION";
 
-    this._name = config.name;
     this._appVersion = config.appVersion;
     this._plugins = [];
     this._httpReqPools = {};
 
     // If a logger has been past in ...
-    if (config.log?.logger !== undefined) {
+    if (config?.logger !== undefined) {
       // ... then use it
-      this._logger = config.log.logger;
+      this._logger = config.logger;
     } else {
       // ... otherwise create and use a console logger
       // NOTE: Use the defaults when creating
       let logConfig: LogConfig = {
-        level: config.log.level,
-        timestamp: config.log.timestamp,
-        timestampFormat: config.log.timestampFormat,
+        level: config.logLevel,
+        timestamp: config.logTimestamp,
+        timestampFormat: config.logTimestampFormat,
       };
 
       this._logger = new LoggerConsole(logConfig);
@@ -144,12 +158,12 @@ export class AppSh {
 
     this._logger.logTimestamps = this.getConfigBool(
       CFG_LOG_TIMESTAMP,
-      config.log.timestamp,
+      config.logTimestamp,
     );
 
     this._logger.logTimestampFormat = this.getConfigStr(
       CFG_LOG_TIMESTAMP_FORMAT,
-      config.log.timestampFormat,
+      config.logTimestampFormat,
     );
 
     let logLevel = this.getConfigStr(CFG_LOG_LEVEL, "");
@@ -187,31 +201,41 @@ export class AppSh {
     // Start the logger now
     this._logger.start();
 
-    this.startup(`App Shell version (${this._appShVersion}) created!`);
+    this.startup(`App Shell version (${this._appShVersion})`);
+    this.startup(`App Version (${this._appVersion})`);
+    this.startup(`NODE_ENV (${NODE_ENV})`);
+
+    this.startup("Setting up shutdown event handlers ...");
+    process.on("SIGINT", async () => await this.exit(0));
+    process.on("SIGTERM", async () => await this.exit(0));
+    process.on("beforeExit", async () => await this.exit(0));
+
+    if (config.catchExceptions) {
+      process.on("uncaughtException", async (e) => {
+        this.error("Caught unhandled error - (%s)", e);
+
+        if (config.exitOnUnhandledExceptions) {
+          this.error("Shutting down because of unhandled error");
+          await this.exit(1);
+        }
+      });
+    }
+
+    if (config.enableHttpMan) {
+      this._httpMan = new HttpMan({ appSh: this });
+    }
+
+    this.startup("Ready to Rock and Roll baby!");
   }
 
-  // Protected methods (that should be overridden) here
-  protected async start(): Promise<boolean> {
-    this.startup("Started!");
-
-    return true;
-  }
+  // Protected methods (that can be overridden) here
   protected async stop(): Promise<void> {
     this.shutdown("Stopped!");
 
     return;
   }
-  protected async healthCheck(): Promise<boolean> {
-    this.debug("Health check called");
-
-    return true;
-  }
 
   // Getters here
-  get name(): string {
-    return this._name;
-  }
-
   get appShVersion(): string {
     return this._appShVersion;
   }
@@ -228,13 +252,19 @@ export class AppSh {
     return this._configMan;
   }
 
+  get httpMan(): HttpMan | undefined {
+    return this._httpMan;
+  }
+
   // Setters here
   set level(level: LogLevel) {
     this._logger.level = level;
   }
 
   // Private methods here
-  private async startupError(code: number, testing: boolean) {
+
+  // Public methods here
+  async shutdownError(code: number = 1, testing: boolean = false) {
     this.error("Heuston, we have a problem. Shutting down now ...");
 
     if (testing) {
@@ -246,43 +276,13 @@ export class AppSh {
     await this.exit(code);
   }
 
-  // Public methods here
-  async init(testing: boolean = false) {
-    this.startup("Initialising ...");
-
-    this.startup(`App Version (${this._appVersion})`);
-    this.startup(`NODE_ENV (${NODE_ENV})`);
-
-    // NB: start the extensions first in case the app needs them to start up
-    for (let ext of this._plugins) {
-      this.startup(`Attempting to start extension ${ext.name} ...`);
-
-      await ext.start().catch(async (e) => {
-        this.error(e);
-
-        // This will exit the app
-        await this.startupError(-1, testing);
-      });
-    }
-
-    this.startup("Attempting to start the application ...");
-
-    await this.start().catch(async (e) => {
-      this.error(e);
-
-      // This will exit the app
-      await this.startupError(-1, testing);
-    });
-
-    this.startup("Setting up event handler for SIGINT and SIGTERM");
-    process.on("SIGINT", async () => await this.exit(0));
-    process.on("SIGTERM", async () => await this.exit(0));
-
-    this.startup("Ready to Rock and Roll baby!");
-  }
-
   async exit(code: number, hard: boolean = true): Promise<void> {
     this.shutdown("Exiting ...");
+
+    // Make sure we stop the HttpMan - probably best to do it first
+    if (this._httpMan !== undefined) {
+      await this._httpMan.stop();
+    }
 
     // Stop the application before the extensions
     this.shutdown("Attempting to stop the application ...");
@@ -291,9 +291,9 @@ export class AppSh {
     });
 
     // Stop the extensions in the reverse order you started them
-    for (let ext of this._plugins.reverse()) {
-      this.shutdown(`Attempting to stop extension ${ext.name} ...`);
-      await ext.stop().catch((e) => {
+    for (let plugin of this._plugins.reverse()) {
+      this.shutdown(`Attempting to stop plugin ${plugin.name} ...`);
+      await plugin.stop().catch((e) => {
         this.error(e);
       });
     }
@@ -396,9 +396,9 @@ export class AppSh {
     this._logger.force(LOGGER_APP_NAME, ...args);
   }
 
-  addPlugin(ext: AppShPlugin): void {
-    this.startup(`Adding extension ${ext.name}`);
-    this._plugins.push(ext);
+  addPlugin(plugin: AppShPlugin): void {
+    this.startup(`Adding extension ${plugin.name}`);
+    this._plugins.push(plugin);
   }
 
   async sleep(durationInSeconds: number): Promise<void> {
@@ -412,14 +412,14 @@ export class AppSh {
 
   async question(
     ask: string,
-    passedOptions?: QuestionOptions,
+    questionOptions?: QuestionOptions,
   ): Promise<string> {
     let input = process.stdin;
     let output = process.stdout;
 
     let options = {
       ...DEFAULT_QUESTION_OPTIONS,
-      ...passedOptions,
+      ...questionOptions,
     };
     return new Promise((resolve) => {
       let rl = readline.createInterface({
@@ -459,16 +459,16 @@ export class AppSh {
     });
   }
 
-  createHttpReqPool(origin: string, passedOptions?: HttpReqPoolOptions): void {
+  createHttpReqPool(origin: string, poolOptions?: HttpReqPoolOptions): void {
     let options = {
       ...DEFAULT_HTTP_REQ_POOL_OPTIONS,
-      ...passedOptions,
+      ...poolOptions,
     };
 
     this.trace(
       "Creating new HTTP pool for (%s) with options (%j)",
       origin,
-      passedOptions,
+      poolOptions,
     );
 
     if (this._httpReqPools[origin] !== undefined) {
@@ -481,11 +481,11 @@ export class AppSh {
   async httpReq(
     origin: string,
     path: string,
-    passedOptions?: HttpReqOptions,
+    reqOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
     let options = {
       ...DEFAULT_HTTP_REQ_OPTIONS,
-      ...passedOptions,
+      ...reqOptions,
     };
 
     this.trace("httpReq for origin (%s) path (%s)", origin, path);
@@ -605,23 +605,12 @@ export class AppShPlugin {
     this.startup("Initialising ...");
   }
 
-  // Protected methods (that should be overridden) here
-  async start(): Promise<boolean> {
-    this.startup("Started!");
-
-    return true;
-  }
+  // Public methods (that can be overridden) here
   async stop(): Promise<void> {
     this.shutdown("Stopped!");
 
     return;
   }
-  async healthCheck(): Promise<boolean> {
-    this.debug("Health check called");
-
-    return true;
-  }
-
   // Getters here
   get name(): string {
     return this._name;
@@ -711,15 +700,15 @@ export class AppShPlugin {
     this._appSh.logger.force(this._name, ...args);
   }
 
-  createHttpReqPool(origin: string, passedOptions?: HttpReqPoolOptions): void {
-    this._appSh.createHttpReqPool(origin, passedOptions);
+  createHttpReqPool(origin: string, poolOptions?: HttpReqPoolOptions): void {
+    this._appSh.createHttpReqPool(origin, poolOptions);
   }
 
   async httpReq(
     origin: string,
     path: string,
-    passedOptions?: HttpReqOptions,
+    reqOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
-    return this._appSh.httpReq(origin, path, passedOptions);
+    return this._appSh.httpReq(origin, path, reqOptions);
   }
 }

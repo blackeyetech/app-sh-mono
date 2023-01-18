@@ -6,7 +6,6 @@ let { AppSh, LogLevel } = require("app-sh");
     name: "Test",
     log: { level: LogLevel.TRACE, timestampFormat: "" },
   });
-  await $.init();
 
   $.info("Hello world");
 

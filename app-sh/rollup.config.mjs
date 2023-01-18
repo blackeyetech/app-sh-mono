@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
+import sourcemaps from "rollup-plugin-sourcemaps";
 
 import { readFileSync } from "fs";
 
@@ -28,7 +29,9 @@ let plugins = [
   json(),
 ];
 
-if (NODE_ENV !== "development") {
+if (NODE_ENV === "development") {
+  plugins.push(sourcemaps);
+} else {
   plugins.push(terser());
 }
 
@@ -36,6 +39,7 @@ export default [
   {
     input: "dist/app-sh.js",
     output: {
+      sourcemap: NODE_ENV === "development",
       file: "dist/app-sh.mjs",
       format: "es",
     },
@@ -45,6 +49,7 @@ export default [
   {
     input: "dist/app-sh.js",
     output: {
+      sourcemap: NODE_ENV === "development",
       file: "dist/app-sh.cjs",
       format: "cjs",
     },

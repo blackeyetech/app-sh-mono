@@ -1,10 +1,9 @@
-import { Shell, LogLevel } from "app-sh";
+import { AppSh, LogLevel } from "app-sh";
 
-let sh = new Shell({
-  name: "Test",
-  log: { level: LogLevel.TRACE, timestampFormat: "" },
+let sh = new AppSh({
+  logLevel: LogLevel.TRACE,
+  logTimestampFormat: "",
 });
-await sh.init();
 
 sh.info("Hello world");
 
@@ -12,5 +11,5 @@ sh.info("Hello world");
 // $.info("Bool (%j)", b);
 // let s = $.getConfigStr({ config: "XXX", defaultVal: "" });
 // $.info("String (%j)", s);
-let n = sh.getConfigNum("XXX", 123);
+let n = sh.getConfigNum("XXX", 123, { cmdLineFlag: "x" });
 sh.info("Number (%j)", n);
