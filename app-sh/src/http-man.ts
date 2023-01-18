@@ -398,9 +398,10 @@ export class HttpMan {
   ): Promise<unknown> {
     // Before we do anything make sure there is a body!
     if (details.body === undefined || details.body.length === 0) {
-      // Chcek for an input validator
+      // Check for an input validator
       if (el.options.zodInputValidator !== undefined) {
-        // Run the validator and let it complain to the user
+        // Since it exists we ASSUME the callback is expecting a JSON payload
+        // So, run the validator and let it complain to the user
         let data = el.options.zodInputValidator.safeParse(undefined);
 
         if (data.success === false) {
