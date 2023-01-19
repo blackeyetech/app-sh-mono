@@ -123,6 +123,8 @@ export class AppSh {
 
   private _httpMan?: HttpMan;
 
+  private _finally?: () => Promise<void>;
+
   // Constructor here
   constructor(appShConfig: AppShConfig) {
     // Setup all of the defaults
@@ -265,6 +267,10 @@ export class AppSh {
   // Private methods here
 
   // Public methods here
+  finally(handler: () => Promise<void>) {
+    this._finally = handler;
+  }
+
   async shutdownError(code: number = 1, testing: boolean = false) {
     this.error("Heuston, we have a problem. Shutting down now ...");
 
@@ -285,11 +291,20 @@ export class AppSh {
       await this._httpMan.stop();
     }
 
-    // Stop the application before the extensions
+    // Stop the application second
     this.shutdown("Attempting to stop the application ...");
     await this.stop().catch((e) => {
       this.error(e);
     });
+
+    // If there was a finally handler provided then call it third
+    if (this._finally !== undefined) {
+      this.shutdown("Calling the finally handler ...");
+
+      await this._finally().catch((e) => {
+        this.error(e);
+      });
+    }
 
     // Stop the extensions in the reverse order you started them
     for (let plugin of this._plugins.reverse()) {

@@ -1,4 +1,4 @@
-import { AppSh, LogLevel, z } from "app-sh";
+import { AppSh, LogLevel, z, HttpMan } from "app-sh";
 
 import * as http from "node:http";
 
@@ -6,14 +6,6 @@ import * as http from "node:http";
 //   sh.error("caught %s)", e);
 //   // sh.exit(1);
 // });
-
-//create a server object:
-// http
-//   .createServer(function (req, res) {
-//     res.write("Hello World!"); //write a response to the client
-//     res.end(); //end the response
-//   })
-//   .listen(8080); //the server object listens on port 8080
 
 class App extends AppSh {
   constructor() {
@@ -28,11 +20,15 @@ class App extends AppSh {
   }
 
   async stop() {
-    this.shutdown("Bye!");
+    this.shutdown("Bye 1!");
   }
 }
 
 let sh = new App();
+
+sh.finally(async () => {
+  sh.shutdown("Bye 2!");
+});
 
 sh.info("Hello world");
 
@@ -57,64 +53,64 @@ sh.trace("Traced!");
 
 let httpMan = sh.httpMan;
 
-httpMan.addHealthcheck(() => {
+httpMan.healthcheck(() => {
   sh.info("Helllo!!!");
   return true;
 });
 // sh.sleep(2);
 
-httpMan.addMiddleware(async (req, res, details, next) => {
+let middleware1 = async (req, res, details, next) => {
   let now = new Date().valueOf();
   sh.info("in the middle of one");
+  // details.body = Buffer.from("howdy");
   await next();
   let time = new Date().valueOf() - now;
   sh.info("finished the middle one - %s", time);
-});
+};
 
-sh.httpMan.addMiddleware(async (req, res, details, next) => {
+let middleware2 = async (req, res, details, next) => {
   sh.info("in the middle of two");
   await next();
   sh.info("finished the middle two");
-});
+};
 
-sh.httpMan.addMiddleware(async (req, res, details, next) => {
-  sh.info("in the middle of three");
-  // await sh.sleep(5);
-  await next();
-  sh.info("finished the middle three");
-});
+// sh.httpMan.addMiddleware(async (req, res, details, next) => {
+//   sh.info("in the middle of three");
+//   // await sh.sleep(5);
+//   await next();
+//   sh.info("finished the middle three");
+// });
 
 const User = z.object({
-  a: z.number(),
+  a: z.string(),
   b: z.string(),
 });
 
-sh.httpMan.addEndpoint(
+sh.httpMan.endpoint(
   "POST",
   "/test/:id",
   (req, res, details) => {
-    sh.info("q=%s", details.url.searchParams.get("q"));
-    sh.info("r=%s", details.url.searchParams.get("r"));
-    sh.info("id=%s", details.params.id);
+    // sh.info("q=%s", details.url.searchParams.get("q"));
+    // sh.info("r=%s", details.url.searchParams.get("r"));
+    // sh.info("id=%s", details.params.id);
     sh.info("body=%s", details.body);
     sh.info("jsonBody=%s", details.jsonBody);
-    sh.info("headers=%s", req.headers);
+    // sh.info("headers=%s", req.headers);
 
     res.statusCode = 200;
     res.end();
   },
-  { zodInputValidator: User, maxBodySize: 512 },
+
+  [HttpMan.body(), HttpMan.json(), middleware1, middleware2],
 );
 
-sh.httpMan.addEndpoint(
-  "GET",
-  "/ping",
-  (req, res, details) => {
-    sh.info("pinged");
-    res.write("pong\n");
+let pong = (req, res, details) => {
+  sh.info("pinged");
+  res.write("pong\n");
+  sh.info("body=%s", details.body);
 
-    res.statusCode = 200;
-    res.end();
-  },
-  { zodInputValidator: User },
-);
+  res.statusCode = 200;
+  res.end();
+};
+
+httpMan.endpoint("GET", "/ping", pong, [HttpMan.body()]);

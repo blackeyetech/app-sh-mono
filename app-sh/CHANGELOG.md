@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.2.0
+
+### Minor Changes
+
+- Added HttpMan middlewares (body, json) and added the finally() method
+
 ## 1.1.1
 
 ### Patch Changes

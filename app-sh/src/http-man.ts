@@ -253,7 +253,7 @@ export class HttpMan {
 
     // Now we need to add an endpoint for healthchecks
     //NOTE: This being added BEFORE any middleware
-    this.addEndpoint("GET", this._healthCheckPath, (req, res, details) =>
+    this.endpoint("GET", this._healthCheckPath, (req, res, details) =>
       this.healthcheckCallback(req, res, details),
     );
   }
@@ -372,11 +372,11 @@ export class HttpMan {
   //   this._middlewareList.push(middleware);
   // }
 
-  addHealthcheck(callback: HealthcheckCallback) {
+  healthcheck(callback: HealthcheckCallback) {
     this._healthcheckCallbacks.push(callback);
   }
 
-  addEndpoint(
+  endpoint(
     method: Method,
     path: string,
     callback: EndpointCallback,
@@ -409,7 +409,7 @@ export class HttpMan {
   }
 
   // Middleware methods here
-  static bodyMiddleware(options: { maxBodySize?: number } = {}): Middleware {
+  static body(options: { maxBodySize?: number } = {}): Middleware {
     let opts = {
       ...{ maxBodySize: 1024 * 1024 },
       ...options,
@@ -453,7 +453,7 @@ export class HttpMan {
     };
   }
 
-  static jsonMiddleware(
+  static json(
     options: {
       zodInputValidator?: z.ZodTypeAny;
     } = {},
