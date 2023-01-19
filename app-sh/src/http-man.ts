@@ -12,19 +12,11 @@ import * as fs from "node:fs";
 export { z };
 
 // Types and Interfaces here
-type MiddlewareNext = (
-  req: http.IncomingMessage,
-  res: http.ServerResponse,
-  details: EndpointCallbackDetails,
-  middlewareStack: Middleware[],
-  callback: EndpointCallback,
-) => Promise<void>;
-
 export type Middleware = (
   req: http.IncomingMessage,
   res: http.ServerResponse,
   details: EndpointCallbackDetails,
-  next: MiddlewareNext,
+  next: () => Promise<void>,
 ) => Promise<void>;
 
 export type HealthcheckCallback = () => Promise<boolean>;
@@ -32,8 +24,8 @@ export type HealthcheckCallback = () => Promise<boolean>;
 export type EndpointCallbackDetails = {
   url: URL;
   params: object;
-  body?: Buffer;
-  jsonBody?: unknown;
+  body?: Buffer; //TODO - move
+  jsonBody?: unknown; //TODO - move
 };
 
 export type EndpointCallback = (
@@ -42,10 +34,14 @@ export type EndpointCallback = (
   details: EndpointCallbackDetails,
 ) => Promise<void>;
 
-export type EndpointOptions = {
-  maxBodySize?: number;
-  zodInputValidator?: z.ZodTypeAny;
-};
+interface MethodListElement {
+  matchFunc: MatchFunction<object>;
+  callback: EndpointCallback;
+
+  middlewareList: Middleware[];
+}
+
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface HttpConfig {
   appSh: AppSh;
@@ -68,22 +64,6 @@ export interface HttpConfig {
   enableHttps?: boolean;
 }
 
-interface MethodListElement {
-  matchFunc: MatchFunction<object>;
-  callback: EndpointCallback;
-
-  middlewareList: Middleware[];
-  options: EndpointOptions;
-}
-
-type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-// Default configs here
-const DEFAULT_ENDPOINT_OPTIONS = {
-  maxBodySize: 1024 * 1024,
-  middlewareList: [],
-};
-
 // Config consts here
 const CFG_HTTP_KEEP_ALIVE_TIMEOUT = "HTTP_KEEP_ALIVE_TIMEOUT";
 const CFG_HTTP_HEADER_TIMEOUT = "HTTP_HEADER_TIMEOUT";
@@ -101,27 +81,12 @@ const CFG_HTTP_CERT_FILE = "HTTP_CERT_FILE";
 
 const HTTP_MAN_TAG = "HttpMan";
 
-// Default configs here
-const DEFAULT_HTTP_CONFIG = {
-  keepAliveTimeout: 65000,
-  headerTimeout: 66000,
-
-  networkInterface: "lo",
-  networkPort: 8080,
-
-  healthcheckPath: "/healthcheck",
-  healthcheckGoodRes: 200,
-  healthcheckBadRes: 503,
-
-  enableHttps: false,
-};
-
 // HttpMan class here
 export class HttpMan {
   private _sh: AppSh;
   private _logger: Logger;
 
-  private _middlewareList: Middleware[];
+  // private _middlewareList: Middleware[];
   private _healthcheckCallbacks: HealthcheckCallback[];
   private _methodListMap: { [key: string]: MethodListElement[] };
 
@@ -141,7 +106,19 @@ export class HttpMan {
 
   constructor(httpConfig: HttpConfig) {
     let config = {
-      ...DEFAULT_HTTP_CONFIG,
+      ...{
+        keepAliveTimeout: 65000,
+        headerTimeout: 66000,
+
+        networkInterface: "lo",
+        networkPort: 8080,
+
+        healthcheckPath: "/healthcheck",
+        healthcheckGoodRes: 200,
+        healthcheckBadRes: 503,
+
+        enableHttps: false,
+      },
       ...httpConfig,
     };
 
@@ -151,7 +128,7 @@ export class HttpMan {
 
     this._logger.startup(HTTP_MAN_TAG, "Initialising HTTP manager ...");
 
-    this._middlewareList = [];
+    // this._middlewareList = [];
     this._healthcheckCallbacks = [];
     this._methodListMap = {};
 
@@ -311,19 +288,14 @@ export class HttpMan {
       // If we are here we found a callback - process it and stop looking
       let details: EndpointCallbackDetails = { url, params: result.params };
 
-      // If the req method is POST/PUT/PATCH we need to get the body
-      if (method === "POST" || method === "PUT" || method === "PATCH") {
-        await this.processHttpReqBody(req, res, el, details);
-      } else {
-        // We don't need the body so kick off the middleware
-        await this.callMiddleware(
-          req,
-          res,
-          details,
-          this._middlewareList,
-          el.callback,
-        );
-      }
+      // // If the req method is POST/PUT/PATCH we need to get the body
+      // if (method === "POST" || method === "PUT" || method === "PATCH") {
+      //   await this.processHttpReqBody(req, res, el, details);
+      // } else {
+      //   // We don't need the body so kick off the middleware
+      //   await this.callMiddleware(req, res, details, el, el.middlewareList);
+      // }
+      await this.callMiddleware(req, res, details, el, el.middlewareList);
 
       found = true;
       break;
@@ -336,154 +308,12 @@ export class HttpMan {
     }
   }
 
-  private async processHttpReqBody(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    el: MethodListElement,
-    details: EndpointCallbackDetails,
-  ) {
-    // Store each data "chunk" we receive this array
-    let chunks: Buffer[] = [];
-    let bodySize = 0;
-
-    // This event fires when there is a chunk of the body received
-    req.on("data", (chunk: Buffer) => {
-      bodySize += chunk.byteLength;
-
-      // maxBodySize has a default so it is always set
-      if (bodySize >= <number>el.options.maxBodySize) {
-        // The body is too big so flag to user and remvoe all of the listeners
-        res.statusCode = 400;
-        res.write(`Body length greater than ${el.options.maxBodySize} bytes`);
-        res.end();
-
-        // May be overkill but do it anyway
-        req.removeAllListeners("data");
-        req.removeAllListeners("end");
-      } else {
-        chunks.push(chunk);
-      }
-    });
-
-    // This event fires when we have received all of the body
-    req.on("end", async () => {
-      // Set the body to the raw
-      details.body = Buffer.concat(chunks);
-
-      let receivedBody = true;
-
-      details.jsonBody = await this.checkForJsonBody(req, el, details).catch(
-        (e) => {
-          // Flag to the user there was an error
-          res.statusCode = 400;
-          res.write(e.toString());
-          res.end();
-
-          receivedBody = false;
-        },
-      );
-
-      if (receivedBody) {
-        await this.callMiddleware(
-          req,
-          res,
-          details,
-          el.middlewareList,
-          el.callback,
-        );
-      }
-    });
-  }
-
-  private async checkForJsonBody(
-    req: http.IncomingMessage,
-    el: MethodListElement,
-    details: EndpointCallbackDetails,
-  ): Promise<unknown> {
-    // Before we do anything make sure there is a body!
-    if (details.body === undefined || details.body.length === 0) {
-      // Check for an input validator
-      if (el.options.zodInputValidator !== undefined) {
-        // Since it exists we ASSUME the callback is expecting a JSON payload
-        // So, run the validator and let it complain to the user
-        let data = el.options.zodInputValidator.safeParse(undefined);
-
-        if (data.success === false) {
-          // Set the error message you want to return
-          let errMessage = data.error.toString();
-          throw new Error(errMessage);
-        }
-      }
-
-      return undefined;
-    }
-
-    let jsonBody: any;
-    let parseOk = true;
-    let errMessage = "";
-
-    // Now check the content-type header to find out what sort of data we have
-    const contentTypeHeader = req.headers["content-type"];
-
-    if (contentTypeHeader !== undefined) {
-      let contentType = contentTypeHeader.split(";")[0];
-
-      switch (contentType) {
-        case "application/json":
-          try {
-            jsonBody = JSON.parse(details.body.toString());
-          } catch (_) {
-            this._logger.error(
-              HTTP_MAN_TAG,
-              "Encountered an error when parsing the body of (%s) request on path (%s) - (%s)",
-              req.method,
-              details.url.toString(),
-              details.body.length > 512 ? "Body to long ..." : details.body,
-            );
-
-            // Set the error message you want to return
-            errMessage = "Can not parse JSON body!";
-
-            parseOk = false;
-          }
-          break;
-        case "application/x-www-form-urlencoded":
-          let qry = new URLSearchParams(details.body.toString());
-          jsonBody = {};
-
-          for (let [key, value] of qry.entries()) {
-            jsonBody[key] = value;
-          }
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (jsonBody !== undefined && el.options.zodInputValidator !== undefined) {
-      let data = el.options.zodInputValidator.safeParse(jsonBody);
-
-      if (data.success === false) {
-        // Set the error message you want to return
-        errMessage = data.error.toString();
-        parseOk = false;
-      }
-    }
-
-    // If the parsing fails then
-    if (parseOk === false) {
-      throw new Error(errMessage);
-    }
-
-    return jsonBody;
-  }
-
   private async callMiddleware(
     req: http.IncomingMessage,
     res: http.ServerResponse,
     details: EndpointCallbackDetails,
+    el: MethodListElement,
     middlewareStack: Middleware[],
-    callback: EndpointCallback,
   ): Promise<void> {
     // If there is a middleware to call ...
     if (middlewareStack.length) {
@@ -493,13 +323,13 @@ export class HttpMan {
           req,
           res,
           details,
+          el,
           middlewareStack.slice(1),
-          callback,
         );
       });
     } else {
-      // No more (or was there any??) middleware to call so call callback
-      await callback(req, res, details);
+      // No more (if there were any) middleware to call so call callback
+      await el.callback(req, res, details);
     }
   }
 
@@ -538,9 +368,9 @@ export class HttpMan {
     return;
   }
 
-  addMiddleware(middleware: Middleware): void {
-    this._middlewareList.push(middleware);
-  }
+  // addMiddleware(middleware: Middleware): void {
+  //   this._middlewareList.push(middleware);
+  // }
 
   addHealthcheck(callback: HealthcheckCallback) {
     this._healthcheckCallbacks.push(callback);
@@ -550,13 +380,8 @@ export class HttpMan {
     method: Method,
     path: string,
     callback: EndpointCallback,
-    endpointOptions: EndpointOptions = {},
+    middlewareList: Middleware[] = [],
   ) {
-    let options = {
-      ...DEFAULT_ENDPOINT_OPTIONS,
-      ...endpointOptions,
-    };
-
     // Make sure we have a list for the method first
     if (this._methodListMap[method] === undefined) {
       this._methodListMap[method] = [];
@@ -579,8 +404,145 @@ export class HttpMan {
     this._methodListMap[method].push({
       matchFunc,
       callback,
-      options,
-      middlewareList: [...this._middlewareList, ...options.middlewareList],
+      middlewareList: [...middlewareList],
     });
+  }
+
+  // Middleware methods here
+  static bodyMiddleware(options: { maxBodySize?: number } = {}): Middleware {
+    let opts = {
+      ...{ maxBodySize: 1024 * 1024 },
+      ...options,
+    };
+
+    return async (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+      details: EndpointCallbackDetails,
+      next: () => Promise<void>,
+    ): Promise<void> => {
+      // Store each data "chunk" we receive this array
+      let chunks: Buffer[] = [];
+      let bodySize = 0;
+
+      // This event fires when there is a chunk of the body received
+      req.on("data", (chunk: Buffer) => {
+        bodySize += chunk.byteLength;
+
+        if (bodySize >= opts.maxBodySize) {
+          // The body is too big so flag to user and remvoe all of the listeners
+          res.statusCode = 400;
+          res.write(`Body length greater than ${opts.maxBodySize} bytes`);
+          res.end();
+
+          // May be overkill but do it anyway
+          req.removeAllListeners("data");
+          req.removeAllListeners("end");
+        } else {
+          chunks.push(chunk);
+        }
+      });
+
+      // This event fires when we have received all of the body
+      req.on("end", async () => {
+        // Set the body in details for the callback
+        details.body = Buffer.concat(chunks);
+
+        await next();
+      });
+    };
+  }
+
+  static jsonMiddleware(
+    options: {
+      zodInputValidator?: z.ZodTypeAny;
+    } = {},
+  ): Middleware {
+    let opts = {
+      ...options,
+    };
+
+    return async (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+      details: EndpointCallbackDetails,
+      next: () => Promise<void>,
+    ): Promise<void> => {
+      // Before we do anything make sure there is a body!
+      if (details.body === undefined || details.body.length === 0) {
+        // Check for an input validator
+        if (opts.zodInputValidator !== undefined) {
+          // Since it exists we ASSUME the callback is expecting a JSON payload
+          // So, run the validator and let it complain to the user
+          let data = opts.zodInputValidator.safeParse(undefined);
+
+          if (data.success === false) {
+            // Set the error message you want to return
+            let errMessage = data.error.toString();
+            res.statusCode = 400;
+            res.write(errMessage);
+            res.end();
+          }
+        }
+
+        return;
+      }
+
+      let jsonBody: any;
+      let parseOk = true;
+      let errMessage = "";
+
+      // Now check the content-type header to find out what sort of data we have
+      const contentTypeHeader = req.headers["content-type"];
+
+      if (contentTypeHeader !== undefined) {
+        let contentType = contentTypeHeader.split(";")[0];
+
+        switch (contentType) {
+          case "application/json":
+            try {
+              jsonBody = JSON.parse(details.body.toString());
+            } catch (_) {
+              // Set the error message you want to return
+              errMessage = "Can not parse JSON body!";
+
+              parseOk = false;
+            }
+            break;
+          case "application/x-www-form-urlencoded":
+            let qry = new URLSearchParams(details.body.toString());
+            jsonBody = {};
+
+            for (let [key, value] of qry.entries()) {
+              jsonBody[key] = value;
+            }
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (jsonBody !== undefined && opts.zodInputValidator !== undefined) {
+        let data = opts.zodInputValidator.safeParse(jsonBody);
+
+        if (data.success === false) {
+          // Set the error message you want to return
+          errMessage = data.error.toString();
+          parseOk = false;
+        }
+      }
+
+      // If the parsing fails then
+      if (parseOk === false) {
+        res.statusCode = 400;
+        res.write(errMessage);
+        res.end();
+
+        return;
+      }
+
+      details.jsonBody = jsonBody;
+      await next();
+    };
   }
 }

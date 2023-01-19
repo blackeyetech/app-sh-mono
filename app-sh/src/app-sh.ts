@@ -19,6 +19,7 @@ export {
   Logger,
   LogLevel,
   ConfigTypes,
+  HttpMan,
   Middleware,
   EndpointCallback,
   EndpointCallbackDetails,
