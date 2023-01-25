@@ -1,4 +1,10 @@
-import dayjs from "dayjs";
+import { ConfigMan, ConfigTypes } from "./config-man";
+
+// Config consts here
+const CFG_LOG_LEVEL = "LOG_LEVEL";
+const CFG_LOG_TIMESTAMP = "LOG_TIMESTAMP";
+const CFG_LOG_TIMESTAMP_LOCALE = "LOG_TIMESTAMP_LOCALE";
+const CFG_LOG_TIMESTAMP_TZ = "LOG_TIMESTAMP_TZ";
 
 // Log levels
 export enum LogLevel {
@@ -14,35 +20,107 @@ export enum LogLevel {
 export interface LogConfig {
   level: LogLevel;
   timestamp: boolean;
-  timestampFormat: string;
+  timestampLocale: string;
+  timestampTz: string;
 }
 
 // Logger class here
 export abstract class Logger {
   protected _level: LogLevel;
-  protected _logTimestamps: boolean;
-  protected _logTimestampFormat: string; // Empty string means use ISO format
+  protected _timestamps: boolean;
+  protected _timestampLocale: string;
+  protected _timestampTz: string;
 
   protected _started: boolean;
 
   constructor(config: LogConfig) {
     this._started = false;
 
+    // Use the configs passed in as the defaults for now
     this._level = config.level;
-    this._logTimestamps = config.timestamp;
-    this._logTimestampFormat = config.timestampFormat;
+    this._timestamps = config.timestamp;
+    this._timestampLocale = config.timestampLocale;
+    this._timestampTz = config.timestampTz;
   }
 
-  start(): void {
+  protected updateConfigs(configMan: ConfigMan): void {
+    this._timestamps = <boolean>configMan.get({
+      config: CFG_LOG_TIMESTAMP,
+      type: ConfigTypes.Boolean,
+      logTag: "",
+      defaultVal: this._timestamps,
+    });
+
+    this._timestampLocale = <string>configMan.get({
+      config: CFG_LOG_TIMESTAMP_LOCALE,
+      type: ConfigTypes.String,
+      logTag: "",
+      defaultVal: this._timestampLocale,
+    });
+
+    this._timestampTz = <string>configMan.get({
+      config: CFG_LOG_TIMESTAMP_TZ,
+      type: ConfigTypes.String,
+      logTag: "",
+      defaultVal: this._timestampTz,
+    });
+
+    let logLevel = <string>configMan.get({
+      config: CFG_LOG_LEVEL,
+      type: ConfigTypes.String,
+      logTag: "",
+      defaultVal: "",
+    });
+
+    // Check if LogLevel was set and if it wasn't use default
+    if (logLevel.length) {
+      this._level = this._level;
+    } else {
+      switch (logLevel.toUpperCase()) {
+        case "SILENT":
+          this._level = LogLevel.COMPLETE_SILENCE;
+          break;
+        case "QUIET":
+          this._level = LogLevel.QUIET;
+          break;
+        case "INFO":
+          this._level = LogLevel.INFO;
+          break;
+        case "STARTUP":
+          this._level = LogLevel.START_UP;
+          break;
+        case "DEBUG":
+          this._level = LogLevel.DEBUG;
+          break;
+        case "TRACE":
+          this._level = LogLevel.TRACE;
+          break;
+        default:
+          this._level = this._level;
+          this.warn(
+            `LogLevel ${logLevel} is unknown. Setting level to ${
+              LogLevel[this._level]
+            }.`,
+          );
+          break;
+      }
+    }
+  }
+
+  start(configMan: ConfigMan): void {
     // Override if you need to set something up before logging starts, e.g. open a file
+
+    // Make sure you set started if you override this method
     this._started = true;
-    return;
+    // Also, make sure you call updateConfigs() if you override this method
+    this.updateConfigs(configMan);
   }
 
   stop(): void {
     // Overide if you need to tidy up before exiting, e.g. close a file
+
+    // Make sure you unset started if you override this method
     this._started = false;
-    return;
   }
 
   abstract fatal(tag: string, ...args: any): void;
@@ -59,12 +137,16 @@ export abstract class Logger {
     this._level = level;
   }
 
-  set logTimestamps(logTimestamps: boolean) {
-    this._logTimestamps = logTimestamps;
+  set logTimestamps(log: boolean) {
+    this._timestamps = log;
   }
 
-  set logTimestampFormat(timestampFormat: string) {
-    this._logTimestampFormat = timestampFormat;
+  set logTimestampLocale(locale: string) {
+    this._timestampLocale = locale;
+  }
+
+  set logTimestampTz(tz: string) {
+    this._timestampTz = tz;
   }
 
   get started(): boolean {
@@ -73,17 +155,28 @@ export abstract class Logger {
 
   protected timestamp(): string {
     // If we are not supposed to generate timestamps then return nothing
-    if (this._logTimestamps === false) {
+    if (this._timestamps === false) {
       return "";
     }
 
     let now = new Date();
 
-    if (this._logTimestampFormat === "ISO") {
-      return now.toISOString();
+    if (this._timestampLocale === "ISO") {
+      // Make sure to add a trailing space!
+      return `${now.toISOString()} `;
     }
 
     // Make sure to add a trailing space!
-    return `${dayjs(now).format(this._logTimestampFormat)} `;
+    return `${now.toLocaleString(this._timestampLocale, {
+      timeZone: this._timestampTz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      fractionalSecondDigits: 3,
+    })} `;
   }
 }

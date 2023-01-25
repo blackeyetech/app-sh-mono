@@ -12,8 +12,9 @@ class App extends AppSh {
     super({
       enableHttpMan: true,
       logLevel: LogLevel.TRACE,
-      logTimestampFormat: "",
-      logTimestamp: false,
+      logTimestampLocale: "en-us",
+      logTimestampTz: "EET",
+      logTimestamp: true,
       catchExceptions: true,
       exitOnUnhandledExceptions: false,
     });

@@ -33,35 +33,6 @@ export interface ConfigOptions {
   redact?: boolean;
 }
 
-// Config consts here
-const CFG_LOG_LEVEL = "LOG_LEVEL";
-const CFG_LOG_TIMESTAMP = "LOG_TIMESTAMP";
-const CFG_LOG_TIMESTAMP_FORMAT = "LOG_TIMESTAMP_FORMAT";
-
-// Default configs here
-const DEFAULT_APP_SH_CONFIG = {
-  appVersion: "N/A",
-  catchExceptions: false,
-  exitOnUnhandledExceptions: false,
-
-  logLevel: LogLevel.INFO,
-  logTimestamp: false,
-  logTimestampFormat: "ISO",
-
-  enableHttpMan: true,
-};
-
-const DEFAULT_QUESTION_OPTIONS = {
-  muteAnswer: false,
-  muteChar: "*",
-};
-
-const DEFAULT_HTTP_REQ_POOL_OPTIONS = {};
-
-const DEFAULT_HTTP_REQ_OPTIONS: HttpReqOptions = {
-  method: "GET",
-};
-
 // Misc consts here
 const NODE_ENV =
   process.env.NODE_ENV === undefined ? "development" : process.env.NODE_ENV;
@@ -77,7 +48,8 @@ export interface AppShConfig {
   logger?: Logger;
   logLevel?: LogLevel;
   logTimestamp?: boolean;
-  logTimestampFormat?: string;
+  logTimestampLocale?: string;
+  logTimestampTz?: string;
 
   enableHttpMan?: boolean;
 }
@@ -129,7 +101,18 @@ export class AppSh {
   constructor(appShConfig: AppShConfig) {
     // Setup all of the defaults
     let config = {
-      ...DEFAULT_APP_SH_CONFIG,
+      ...{
+        appVersion: "N/A",
+        catchExceptions: false,
+        exitOnUnhandledExceptions: false,
+
+        logLevel: LogLevel.INFO,
+        logTimestamp: false,
+        logTimestampLocale: "ISO",
+        logTimestampTz: "UTC",
+
+        enableHttpMan: true,
+      },
       ...appShConfig,
     };
 
@@ -151,7 +134,8 @@ export class AppSh {
       let logConfig: LogConfig = {
         level: config.logLevel,
         timestamp: config.logTimestamp,
-        timestampFormat: config.logTimestampFormat,
+        timestampLocale: config.logTimestampLocale,
+        timestampTz: config.logTimestampTz,
       };
 
       this._logger = new LoggerConsole(logConfig);
@@ -159,50 +143,8 @@ export class AppSh {
 
     this._configMan = new ConfigMan(this._logger);
 
-    this._logger.logTimestamps = this.getConfigBool(
-      CFG_LOG_TIMESTAMP,
-      config.logTimestamp,
-    );
-
-    this._logger.logTimestampFormat = this.getConfigStr(
-      CFG_LOG_TIMESTAMP_FORMAT,
-      config.logTimestampFormat,
-    );
-
-    let logLevel = this.getConfigStr(CFG_LOG_LEVEL, "");
-
-    // Check if LogLevel was set, if so set it
-    if (logLevel.length > 0) {
-      switch (logLevel.toUpperCase()) {
-        case "SILENT":
-          this._logger.level = LogLevel.COMPLETE_SILENCE;
-          break;
-        case "QUIET":
-          this._logger.level = LogLevel.QUIET;
-          break;
-        case "INFO":
-          this._logger.level = LogLevel.INFO;
-          break;
-        case "STARTUP":
-          this._logger.level = LogLevel.START_UP;
-          break;
-        case "DEBUG":
-          this._logger.level = LogLevel.DEBUG;
-          break;
-        case "TRACE":
-          this._logger.level = LogLevel.TRACE;
-          break;
-        default:
-          this._logger.level = LogLevel.INFO;
-          this._logger.warn(
-            `LogLevel ${logLevel} is unknown. Setting level to INFO.`,
-          );
-          break;
-      }
-    }
-
     // Start the logger now
-    this._logger.start();
+    this._logger.start(this._configMan);
 
     this.startup(`App Shell version (${this._appShVersion})`);
     this.startup(`App Version (${this._appVersion})`);
@@ -434,7 +376,10 @@ export class AppSh {
     let output = process.stdout;
 
     let options = {
-      ...DEFAULT_QUESTION_OPTIONS,
+      ...{
+        muteAnswer: false,
+        muteChar: "*",
+      },
       ...questionOptions,
     };
     return new Promise((resolve) => {
@@ -477,7 +422,7 @@ export class AppSh {
 
   createHttpReqPool(origin: string, poolOptions?: HttpReqPoolOptions): void {
     let options = {
-      ...DEFAULT_HTTP_REQ_POOL_OPTIONS,
+      ...{},
       ...poolOptions,
     };
 
@@ -500,7 +445,9 @@ export class AppSh {
     reqOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
     let options = {
-      ...DEFAULT_HTTP_REQ_OPTIONS,
+      ...{
+        method: "GET",
+      },
       ...reqOptions,
     };
 
