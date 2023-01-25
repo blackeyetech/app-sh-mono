@@ -1,4 +1,3 @@
 packages:
-  - "app-sh"
-  - "testing"
-  - "plugins/template"
+  - app-sh
+  - testing

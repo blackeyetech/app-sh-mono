@@ -8,6 +8,7 @@ import {
   Middleware,
   EndpointCallback,
   EndpointCallbackDetails,
+  HttpError,
   z,
 } from "./http-man";
 
@@ -23,6 +24,7 @@ export {
   Middleware,
   EndpointCallback,
   EndpointCallbackDetails,
+  HttpError,
   z,
 };
 
@@ -90,7 +92,10 @@ export class AppSh {
 
   private _logger: Logger;
 
-  private _plugins: AppShPlugin[];
+  private _plugins: {
+    plugin: AppShPlugin;
+    stopMethod: () => Promise<void>;
+  }[];
   private _httpReqPools: { [key: string]: Pool };
 
   private _httpMan?: HttpMan;
@@ -250,8 +255,8 @@ export class AppSh {
 
     // Stop the extensions in the reverse order you started them
     for (let plugin of this._plugins.reverse()) {
-      this.shutdown(`Attempting to stop plugin ${plugin.name} ...`);
-      await plugin.stop().catch((e) => {
+      this.shutdown(`Attempting to stop plugin ${plugin.plugin.name} ...`);
+      await plugin.stopMethod().catch((e) => {
         this.error(e);
       });
     }
@@ -354,9 +359,9 @@ export class AppSh {
     this._logger.force(LOGGER_APP_NAME, ...args);
   }
 
-  addPlugin(plugin: AppShPlugin): void {
-    this.startup(`Adding extension ${plugin.name}`);
-    this._plugins.push(plugin);
+  addPlugin(plugin: AppShPlugin, stopMethod: () => Promise<void>): void {
+    this.startup(`Adding plugin ${plugin.name}`);
+    this._plugins.push({ plugin, stopMethod });
   }
 
   async sleep(durationInSeconds: number): Promise<void> {
@@ -550,6 +555,7 @@ export class AppSh {
 export interface AppShPluginConfig {
   name: string;
   appSh: AppSh;
+  pluginVersion: string;
 }
 
 // AppShPlugin class here
@@ -557,26 +563,34 @@ export class AppShPlugin {
   // Properties here
   private _name: string;
   private _appSh: AppSh;
+  private _pluginVersion: string;
 
   // Constructor here
   constructor(config: AppShPluginConfig) {
     this._name = config.name;
     this._appSh = config.appSh;
+    this._pluginVersion = config.pluginVersion;
 
-    this._appSh.addPlugin(this);
+    this._appSh.addPlugin(this, async () => {
+      this.stop();
+    });
 
     this.startup("Initialising ...");
   }
 
-  // Public methods (that can be overridden) here
-  async stop(): Promise<void> {
+  // Protected methods (that can be overridden) here
+  protected async stop(): Promise<void> {
+    // This is a default stop method. Override it if you need to clean up
     this.shutdown("Stopped!");
-
-    return;
   }
+
   // Getters here
   get name(): string {
     return this._name;
+  }
+
+  get pluginVersion(): string {
+    return this._pluginVersion;
   }
 
   // Private methods here

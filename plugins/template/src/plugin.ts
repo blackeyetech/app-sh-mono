@@ -1,5 +1,5 @@
 // imports here
-import { ShellPlugin, ShellPluginConfig } from "app-sh";
+import { AppSh, AppShPlugin } from "app-sh";
 
 // Interfaces here
 
@@ -8,19 +8,20 @@ import { ShellPlugin, ShellPluginConfig } from "app-sh";
 // Default configs here
 
 // Template class here
-export class Template extends ShellPlugin {
-  constructor(extConfig: ShellPluginConfig) {
-    super(extConfig);
+export class Template extends AppShPlugin {
+  constructor(appSh: AppSh) {
+    super({
+      name: "TEMPLATE",
+      appSh,
+      // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
+      // rollup plugin at build time
+      pluginVersion: "PLUGIN_VERSION",
+    });
   }
+
+  // Protected methods here
 
   // Private methods here
 
-  // Public methods here
-  async start(): Promise<boolean> {
-    return true;
-  }
-
-  async stop(): Promise<void> {
-    return;
-  }
+  // Public methos here
 }

@@ -46,11 +46,14 @@ importers:
       undici: 5.13.0
       zod: 3.20.2
 
-  plugins/template:
+  plugins/filedb:
     specifiers:
-      app-sh: workspace:^1.0.0
+      app-sh: workspace:^1.2.0
     dependencies:
       app-sh: link:../../app-sh
+
+  plugins/template:
+    specifiers: {}
 
   testing:
     specifiers:

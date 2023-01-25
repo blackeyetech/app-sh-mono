@@ -36,8 +36,5 @@
     "Plugin"
   ],
   "author": "Black Eye Technology",
-  "license": "MIT",
-  "dependencies": {
-    "app-sh": "workspace:^1.0.0"
-  }
+  "license": "MIT"
 }

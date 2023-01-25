@@ -1,4 +1,4 @@
-import { AppSh, LogLevel, z, HttpMan } from "app-sh";
+import { AppSh, LogLevel, z, HttpMan, HttpError } from "app-sh";
 
 import * as http from "node:http";
 
@@ -94,21 +94,30 @@ sh.httpMan.endpoint(
     // sh.info("q=%s", details.url.searchParams.get("q"));
     // sh.info("r=%s", details.url.searchParams.get("r"));
     // sh.info("id=%s", details.params.id);
-    sh.info("body=%s", details.body);
-    sh.info("jsonBody=%s", details.jsonBody);
+    sh.info("body=%s", details.middlewareProps.body);
+    sh.info("jsonBody=%s", details.middlewareProps.json);
     // sh.info("headers=%s", req.headers);
+
+    if (details.params.id === "1") {
+      throw new HttpError(400, "fool!");
+    }
 
     res.statusCode = 200;
     res.end();
   },
 
-  [HttpMan.body(), HttpMan.json(), middleware1, middleware2],
+  [
+    HttpMan.body(),
+    HttpMan.json({ zodInputValidator: User }),
+    middleware1,
+    middleware2,
+  ],
 );
 
 let pong = (req, res, details) => {
   sh.info("pinged");
   res.write("pong\n");
-  sh.info("body=%s", details.body);
+  sh.info("body=%s", details.middlewareProps.body);
 
   res.statusCode = 200;
   res.end();

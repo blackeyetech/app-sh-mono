@@ -23,16 +23,15 @@ export type HealthcheckCallback = () => Promise<boolean>;
 
 export type EndpointCallbackDetails = {
   url: URL;
-  params: object;
-  body?: Buffer; //TODO - move
-  jsonBody?: unknown; //TODO - move
+  params: { [key: string]: unknown };
+  middlewareProps: { [key: string]: unknown };
 };
 
 export type EndpointCallback = (
   req: http.IncomingMessage,
   res: http.ServerResponse,
   details: EndpointCallbackDetails,
-) => Promise<void>;
+) => Promise<void> | void;
 
 interface MethodListElement {
   matchFunc: MatchFunction<object>;
@@ -42,6 +41,16 @@ interface MethodListElement {
 }
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+export class HttpError {
+  status: number;
+  message: string;
+
+  constructor(status: number, message: string) {
+    this.status = status;
+    this.message = message;
+  }
+}
 
 export interface HttpConfig {
   appSh: AppSh;
@@ -286,7 +295,11 @@ export class HttpMan {
       }
 
       // If we are here we found a callback - process it and stop looking
-      let details: EndpointCallbackDetails = { url, params: result.params };
+      let details: EndpointCallbackDetails = {
+        url,
+        params: <{ [key: string]: unknown }>result.params,
+        middlewareProps: {},
+      };
 
       // // If the req method is POST/PUT/PATCH we need to get the body
       // if (method === "POST" || method === "PUT" || method === "PATCH") {
@@ -328,8 +341,24 @@ export class HttpMan {
         );
       });
     } else {
-      // No more (if there were any) middleware to call so call callback
-      await el.callback(req, res, details);
+      // No more (if there were any) middleware to call so call the callback
+
+      // the callback can be async or not so check for and use a try/catch
+      try {
+        if (el.callback.constructor.name === "AsyncFunction") {
+          // This is async so use await
+          await el.callback(req, res, details);
+        } else {
+          // This is a synchronous call
+          el.callback(req, res, details);
+        }
+      } catch (e) {
+        if (e instanceof HttpError) {
+          res.statusCode = e.status;
+          res.write(e.message);
+          res.end();
+        }
+      }
     }
   }
 
@@ -446,7 +475,7 @@ export class HttpMan {
       // This event fires when we have received all of the body
       req.on("end", async () => {
         // Set the body in details for the callback
-        details.body = Buffer.concat(chunks);
+        details.middlewareProps.body = Buffer.concat(chunks);
 
         await next();
       });
@@ -469,16 +498,22 @@ export class HttpMan {
       next: () => Promise<void>,
     ): Promise<void> => {
       // Before we do anything make sure there is a body!
-      if (details.body === undefined || details.body.length === 0) {
+      let body: Buffer | undefined;
+
+      if (Buffer.isBuffer(details.middlewareProps.body)) {
+        body = details.middlewareProps.body;
+      }
+
+      if (body === undefined || body.length === 0) {
         // Check for an input validator
         if (opts.zodInputValidator !== undefined) {
           // Since it exists we ASSUME the callback is expecting a JSON payload
           // So, run the validator and let it complain to the user
-          let data = opts.zodInputValidator.safeParse(undefined);
+          let payload = opts.zodInputValidator.safeParse(undefined);
 
-          if (data.success === false) {
+          if (payload.success === false) {
             // Set the error message you want to return
-            let errMessage = data.error.toString();
+            let errMessage = payload.error.toString();
             res.statusCode = 400;
             res.write(errMessage);
             res.end();
@@ -501,7 +536,7 @@ export class HttpMan {
         switch (contentType) {
           case "application/json":
             try {
-              jsonBody = JSON.parse(details.body.toString());
+              jsonBody = JSON.parse(body.toString());
             } catch (_) {
               // Set the error message you want to return
               errMessage = "Can not parse JSON body!";
@@ -510,7 +545,7 @@ export class HttpMan {
             }
             break;
           case "application/x-www-form-urlencoded":
-            let qry = new URLSearchParams(details.body.toString());
+            let qry = new URLSearchParams(body.toString());
             jsonBody = {};
 
             for (let [key, value] of qry.entries()) {
@@ -525,7 +560,11 @@ export class HttpMan {
       if (jsonBody !== undefined && opts.zodInputValidator !== undefined) {
         let data = opts.zodInputValidator.safeParse(jsonBody);
 
-        if (data.success === false) {
+        if (data.success) {
+          // This will ensure addtional properties are only passed in if
+          // the zod schema allows it
+          jsonBody = data.data;
+        } else {
           // Set the error message you want to return
           errMessage = data.error.toString();
           parseOk = false;
@@ -541,7 +580,7 @@ export class HttpMan {
         return;
       }
 
-      details.jsonBody = jsonBody;
+      details.middlewareProps.json = jsonBody;
       await next();
     };
   }
