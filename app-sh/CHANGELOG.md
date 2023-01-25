@@ -1,5 +1,12 @@
 # app-sh
 
+## 1.2.1
+
+### Patch Changes
+
+- Removed dayjs and am using toLocaleString() and toISOString() to format now
+- Changed plugin (stop(), version and config), changed httpMan (using zod.safeParse return value)
+
 ## 1.2.0
 
 ### Minor Changes
