@@ -36,5 +36,8 @@
     "Plugin"
   ],
   "author": "Black Eye Technology",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  }
 }

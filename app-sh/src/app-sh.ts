@@ -9,7 +9,6 @@ import {
   EndpointCallback,
   EndpointCallbackDetails,
   HttpError,
-  z,
 } from "./http-man";
 
 import { Pool, Dispatcher } from "undici";
@@ -25,7 +24,6 @@ export {
   EndpointCallback,
   EndpointCallbackDetails,
   HttpError,
-  z,
 };
 
 // Interfaces here

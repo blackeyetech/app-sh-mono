@@ -1,4 +1,4 @@
-import { AppSh, LogLevel, z, HttpMan, HttpError } from "app-sh";
+import { AppSh, LogLevel, HttpMan, HttpError } from "app-sh";
 
 import * as http from "node:http";
 
@@ -82,10 +82,10 @@ let middleware2 = async (req, res, details, next) => {
 //   sh.info("finished the middle three");
 // });
 
-const User = z.object({
-  a: z.string(),
-  b: z.string(),
-});
+// const User = z.object({
+//   a: z.string(),
+//   b: z.string(),
+// });
 
 sh.httpMan.endpoint(
   "POST",
@@ -106,12 +106,7 @@ sh.httpMan.endpoint(
     res.end();
   },
 
-  [
-    HttpMan.body(),
-    HttpMan.json({ zodInputValidator: User }),
-    middleware1,
-    middleware2,
-  ],
+  [HttpMan.body(), HttpMan.json({}), middleware1, middleware2],
 );
 
 let pong = (req, res, details) => {

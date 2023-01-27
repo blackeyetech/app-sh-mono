@@ -10,6 +10,9 @@
   "prettier": {
     "trailingComma": "all"
   },
+  "publishConfig": {
+    "access": "restricted"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
