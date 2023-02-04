@@ -11,8 +11,6 @@ import {
   HttpError,
 } from "./http-man";
 
-import { Pool, Dispatcher } from "undici";
-
 import * as readline from "node:readline";
 
 export {
@@ -26,21 +24,20 @@ export {
   HttpError,
 };
 
-// Interfaces here
-export interface ConfigOptions {
-  cmdLineFlag?: string;
-  silent?: boolean;
-  redact?: boolean;
-}
-
 // Misc consts here
 const NODE_ENV =
   process.env.NODE_ENV === undefined ? "development" : process.env.NODE_ENV;
 
 const LOGGER_APP_NAME = "App";
 
-// Interfaces here
-export interface AppShConfig {
+// Types here
+export type ConfigOptions = {
+  cmdLineFlag?: string;
+  silent?: boolean;
+  redact?: boolean;
+};
+
+export type AppShConfig = {
   appVersion?: string;
   catchExceptions?: boolean;
   exitOnUnhandledExceptions?: boolean;
@@ -52,32 +49,61 @@ export interface AppShConfig {
   logTimestampTz?: string;
 
   enableHttpMan?: boolean;
-}
+};
 
-export interface QuestionOptions {
+export type QuestionOptions = {
   muteAnswer?: boolean;
   muteChar?: string;
-}
+};
 
-export interface HttpReqPoolOptions extends Pool.Options {}
-
-export interface HttpReqResponse {
+export type HttpReqResponse = {
   statusCode: number;
-  headers: { [key: string]: string | string[] | undefined };
-  trailers: { [key: string]: string };
+  headers: Headers;
   body: string | object;
-}
+};
 
-export interface HttpReqOptions {
+export type HttpReqOptions = {
   method: "GET" | "PUT" | "POST" | "DELETE" | "PATCH";
-  searchParams?: { [key: string]: string | string[] };
-  headers?: { [key: string]: string };
-  body?: object | string;
+  searchParams?: Record<string, string>;
+  headers?: Record<string, string>;
+  body?: object | [] | string;
   auth?: {
     username: string;
     password: string;
   };
   bearerToken?: string;
+  timeout?: number;
+
+  // These are additional options for fetch
+  keepalive?: boolean;
+  cache?: RequestCache;
+  credentials?: RequestCredentials;
+  mode?: RequestMode;
+  redirect?: RequestRedirect;
+  referrer?: string;
+  referrerPolicy?: ReferrerPolicy;
+  signal?: AbortSignal;
+};
+
+// Error classes here
+export class HttpReqAborted {
+  public timedOut: boolean;
+  public message: string;
+
+  constructor(timedOut: boolean, message: string) {
+    this.timedOut = timedOut;
+    this.message = message;
+  }
+}
+
+export class HttpReqError {
+  public status: number;
+  public message: string;
+
+  constructor(status: number, message: string) {
+    this.status = status;
+    this.message = message;
+  }
 }
 
 // AppSh class here
@@ -94,7 +120,6 @@ export class AppSh {
     plugin: AppShPlugin;
     stopMethod: () => Promise<void>;
   }[];
-  private _httpReqPools: { [key: string]: Pool };
 
   private _httpMan?: HttpMan;
 
@@ -125,7 +150,6 @@ export class AppSh {
 
     this._appVersion = config.appVersion;
     this._plugins = [];
-    this._httpReqPools = {};
 
     // If a logger has been past in ...
     if (config?.logger !== undefined) {
@@ -257,11 +281,6 @@ export class AppSh {
       await plugin.stopMethod().catch((e) => {
         this.error(e);
       });
-    }
-
-    // Clear down the pools
-    for (let origin in this._httpReqPools) {
-      this._httpReqPools[origin].destroy();
     }
 
     this.shutdown("So long and thanks for all the fish!");
@@ -423,25 +442,6 @@ export class AppSh {
     });
   }
 
-  createHttpReqPool(origin: string, poolOptions?: HttpReqPoolOptions): void {
-    let options = {
-      ...{},
-      ...poolOptions,
-    };
-
-    this.trace(
-      "Creating new HTTP pool for (%s) with options (%j)",
-      origin,
-      poolOptions,
-    );
-
-    if (this._httpReqPools[origin] !== undefined) {
-      throw new Error(`A HTTP pool already exists for ${origin}`);
-    }
-
-    this._httpReqPools[origin] = new Pool(origin, options);
-  }
-
   async httpReq(
     origin: string,
     path: string,
@@ -450,25 +450,23 @@ export class AppSh {
     let options = {
       ...{
         method: "GET",
+        headers: {},
+        timmeout: 0,
+        keepalive: true,
+        cache: <RequestCache>"no-store",
+        mode: <RequestMode>"cors",
+        credentials: <RequestCredentials>"include",
+        redirect: <RequestRedirect>"follow",
+        referrerPolicy: <ReferrerPolicy>"no-referrer",
       },
       ...reqOptions,
     };
 
     this.trace("httpReq for origin (%s) path (%s)", origin, path);
 
-    let pool = this._httpReqPools[origin];
-
-    // If the pool doesn't exist then create one for the origin with defaults
-    if (pool === undefined) {
-      this.createHttpReqPool(origin);
-      pool = this._httpReqPools[origin];
-    }
-
-    let headers = options.headers === undefined ? {} : options.headers;
-
     // If a bearer token is provided then add a Bearer auth header
     if (options.bearerToken !== undefined) {
-      headers.Authorization = `Bearer ${options.bearerToken}`;
+      options.headers.Authorization = `Bearer ${options.bearerToken}`;
     }
 
     // If the basic auth creds are provided add a Basic auth header
@@ -476,35 +474,102 @@ export class AppSh {
       let token = Buffer.from(
         `${options.auth.username}:${options.auth.password}`,
       ).toString("base64");
-      headers.Authorization = `Basic ${token}`;
+      options.headers.Authorization = `Basic ${token}`;
     }
 
     let body: string | undefined;
 
-    if (options.body !== undefined && options.method !== "GET") {
-      // If there is no content-type specifed then we assume
-      // this is a json payload, however if the body is an object
-      // then we know it is a json payload even if the
-      // content-type was set
-      if (
-        options.headers?.["content-type"] === undefined ||
-        typeof options.body === "object"
-      ) {
-        headers["content-type"] = "application/json; charset=utf-8";
+    // Automatically stringify and set the header if this is a JSON payload
+    // BUT dont do it for GETs and DELETE since they can have no body
+    if (
+      options.body !== undefined &&
+      options.method !== "GET" &&
+      options.method !== "DELETE"
+    ) {
+      // Rem an array is an object to!
+      if (typeof options.body === "object") {
+        // Add the content-type if it hasn't been provided
+        if (options.headers?.["content-type"] === undefined) {
+          options.headers["content-type"] = "application/json; charset=utf-8";
+        }
+
         body = JSON.stringify(options.body);
       } else {
         body = options.body;
       }
     }
 
-    let results = await pool.request({
-      origin,
-      path,
-      method: <Dispatcher.HttpMethod>options.method,
-      headers,
-      query: options.searchParams,
+    // NODE_TLS_REJECT_UNAUTHORIZED=0
+
+    // Build the url
+    let url = `${origin}${path}`;
+    // And add the query string if one has been provided
+    if (options.searchParams !== undefined) {
+      url += `?${new URLSearchParams(options.searchParams)}`;
+    }
+
+    let timeoutTimer: NodeJS.Timer | undefined;
+
+    // Create an AbortController if a timeout has been provided
+    if (options.timeout) {
+      const controller = new AbortController();
+
+      // NOTE: this will overwrite a signal if one has been provided
+      options.signal = controller.signal;
+
+      timeoutTimer = setTimeout(() => {
+        controller.abort();
+      }, options.timeout * 1000);
+    }
+
+    let results = await fetch(url, {
+      method: options.method,
+      headers: options.headers,
       body,
+      keepalive: options.keepalive,
+      cache: options.cache,
+      credentials: options.credentials,
+      mode: options.mode,
+      redirect: options.redirect,
+      referrer: options.referrer,
+      referrerPolicy: options.referrerPolicy,
+      signal: options.signal,
+    }).catch((e) => {
+      // Check if the request was aborted
+      if (e.name === "AbortError") {
+        // If timeout was set then the req must have timed out
+        if (options.timeout) {
+          throw new HttpReqAborted(
+            true,
+            `Request timeout out after ${options.timeout} seconds`,
+          );
+        }
+
+        throw new HttpReqAborted(false, "Request aborted");
+      }
+
+      // Need to check if we started a timeout
+      if (timeoutTimer !== undefined) {
+        clearTimeout(timeoutTimer);
+      }
+
+      // We don't know what the error is so pass it back
+      throw e;
     });
+
+    // Need to check if we started a timeout
+    if (timeoutTimer !== undefined) {
+      clearTimeout(timeoutTimer);
+    }
+
+    if (!results.ok) {
+      let message = await results.text();
+
+      throw new HttpReqError(
+        results.status,
+        message.length === 0 ? results.statusText : message,
+      );
+    }
 
     let resData: object | string;
 
@@ -512,8 +577,8 @@ export class AppSh {
     // and is not "0" (no need to convert to a number)
     let contentExists = false;
     if (
-      results.headers["content-length"] !== undefined &&
-      results.headers["content-length"] !== "0"
+      results.headers.get("content-length") !== undefined &&
+      results.headers.get("content-length") !== "0"
     ) {
       contentExists = true;
     }
@@ -521,40 +586,39 @@ export class AppSh {
     // Only convert to json if there is content otherwise .json() will throw
     if (
       contentExists &&
-      results.headers["content-type"]?.startsWith("application/json") === true
+      results.headers.get("content-type")?.startsWith("application/json") ===
+        true
     ) {
-      resData = await results.body.json();
+      resData = await results.json();
     } else {
-      resData = await results.body.text();
+      resData = await results.text();
       // If the string has length then let's check the content-type again for
       // json data - sometimes the server isn't setting the content-length ...
       if (
         resData.length &&
-        results.headers["content-type"]?.startsWith("application/json") === true
+        results.headers.get("content-type")?.startsWith("application/json") ===
+          true
       ) {
         resData = JSON.parse(resData);
       }
     }
 
-    let res: HttpReqResponse = {
-      statusCode: results.statusCode,
+    return {
+      statusCode: results.status,
       headers: results.headers,
-      trailers: results.trailers,
       body: resData,
     };
-
-    return res;
   }
 }
 
 // AppShPlugin code here
 
-// Interfaces here
-export interface AppShPluginConfig {
+// Types here
+export type AppShPluginConfig = {
   name: string;
   appSh: AppSh;
   pluginVersion: string;
-}
+};
 
 // AppShPlugin class here
 export class AppShPlugin {
@@ -673,10 +737,6 @@ export class AppShPlugin {
 
   force(...args: any): void {
     this._appSh.logger.force(this._name, ...args);
-  }
-
-  createHttpReqPool(origin: string, poolOptions?: HttpReqPoolOptions): void {
-    this._appSh.createHttpReqPool(origin, poolOptions);
   }
 
   async httpReq(

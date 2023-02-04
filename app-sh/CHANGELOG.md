@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.0
+
+### Minor Changes
+
+- Removed undici, added cors and general tidy up of HttpMan
+
 ## 1.2.1
 
 ### Patch Changes

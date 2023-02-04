@@ -1,5 +1,6 @@
 // imports here
 import { AppSh, Logger } from "./app-sh.js";
+import { SseServer } from "./sse-server";
 
 import { match, MatchFunction } from "path-to-regexp";
 import { z } from "zod";
@@ -9,9 +10,9 @@ import * as https from "node:https";
 import * as os from "node:os";
 import * as fs from "node:fs";
 
-// export { z };
+export { SseServer };
 
-// Types and Interfaces here
+// Types here
 export type Middleware = (
   req: http.IncomingMessage,
   res: http.ServerResponse,
@@ -21,10 +22,34 @@ export type Middleware = (
 
 export type HealthcheckCallback = () => Promise<boolean>;
 
+export type SseEndpointOptions = {
+  retryInterval?: number; // In seconds
+  pingInterval?: number; // In seconds
+  pingEvent?: string;
+};
+
+export type CorsOptions = {
+  enable: boolean;
+
+  originsAllowed?: "*" | string[];
+  headersAllowed?: "*" | string[];
+  headersExposed?: string[];
+  methodsAllowed?: string[];
+  credentialsAllowed?: boolean;
+  maxAge?: number;
+};
+
+export type EndpointOptions = {
+  middlewareList?: Middleware[];
+  sseEndpointOptions?: SseEndpointOptions;
+  corsOptions?: CorsOptions;
+};
+
 export type EndpointCallbackDetails = {
   url: URL;
   params: { [key: string]: unknown };
   middlewareProps: { [key: string]: unknown };
+  sseServer?: SseServer;
 };
 
 export type EndpointCallback = (
@@ -33,14 +58,16 @@ export type EndpointCallback = (
   details: EndpointCallbackDetails,
 ) => Promise<void> | void;
 
-interface MethodListElement {
+type MethodListElement = {
   matchFunc: MatchFunction<object>;
   callback: EndpointCallback;
 
   middlewareList: Middleware[];
-}
+  sseEndpointOptions?: SseEndpointOptions;
+  corsOptions?: CorsOptions;
+};
 
-type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
 
 export class HttpError {
   status: number;
@@ -52,7 +79,7 @@ export class HttpError {
   }
 }
 
-export interface HttpConfig {
+export type HttpConfig = {
   appSh: AppSh;
 
   // NOTE: The default node keep alive is 5 secs. This needs to be set
@@ -71,7 +98,7 @@ export interface HttpConfig {
   healthcheckBadRes?: number;
 
   enableHttps?: boolean;
-}
+};
 
 // Config consts here
 const CFG_HTTP_KEEP_ALIVE_TIMEOUT = "HTTP_KEEP_ALIVE_TIMEOUT";
@@ -97,7 +124,7 @@ export class HttpMan {
 
   // private _middlewareList: Middleware[];
   private _healthcheckCallbacks: HealthcheckCallback[];
-  private _methodListMap: { [key: string]: MethodListElement[] };
+  private _methodListMap: Record<string, MethodListElement[]>;
 
   private _httpKeepAliveTimeout: number;
   private _httpHeaderTimeout: number;
@@ -267,15 +294,152 @@ export class HttpMan {
     );
   }
 
+  private handlePreflightReq(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    url: URL,
+  ): void {
+    // TODO - remove
+    console.log(req.method, ":", req.url);
+    for (let h in req.headers) {
+      console.log(h, ":", req.headers[h]);
+    }
+
+    // Get the method and origin. both MUST be available or its not valid
+    let method = req.headers["access-control-request-method"];
+    let origin = req.headers["origin"];
+
+    if (method === undefined || origin === undefined) {
+      res.statusCode = 400;
+      res.end();
+      return;
+    }
+
+    // First, make sure we have registered callbacks for req method
+    let list = this._methodListMap[method];
+
+    // No list mean no callbacks for that method, i.e. it's unknown
+    if (list === undefined) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
+    // Next see if we have a registered callback for the HTTP req path
+    let foundEl: MethodListElement | undefined;
+
+    for (let el of list) {
+      let result = el.matchFunc(url.pathname);
+
+      // If result is false that means we found nothing
+      if (result === false) {
+        continue;
+      }
+
+      foundEl = el;
+      break;
+    }
+
+    // If found is still false then we know there is no registered callback
+    if (foundEl === undefined) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
+    this.setCorsHeaders(req, res, foundEl, origin);
+
+    res.statusCode = 204;
+    res.end();
+  }
+
+  private setCorsHeaders(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    foundEl: MethodListElement,
+    origin: string,
+  ) {
+    let corsOpts = foundEl.corsOptions;
+
+    // If we are here we found a callback - check that CORS is enabled
+    if (corsOpts?.enable !== true) {
+      // It isn't so set no headers - the browser will handle the rest
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
+    // Access-Control-Allow-Origin
+    if (
+      corsOpts.originsAllowed === "*" ||
+      corsOpts.originsAllowed?.includes(origin)
+    ) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+    }
+
+    // Access-Control-Allow-Headers
+    let reqHeaders = req.headers["access-control-request-headers"];
+
+    if (reqHeaders !== undefined) {
+      // If we allow any header then return the headers sent by client
+      if (corsOpts.headersAllowed === "*") {
+        res.setHeader("Access-Control-Allow-Headers", reqHeaders);
+      } else if (corsOpts.headersAllowed !== undefined) {
+        res.setHeader(
+          "Access-Control-Allow-Headers",
+          corsOpts.headersAllowed.join(","),
+        );
+      }
+    }
+
+    // Access-Control-Expose-Headers
+    if (
+      corsOpts.headersExposed !== undefined &&
+      corsOpts.headersExposed.length
+    ) {
+      res.setHeader(
+        "Access-Control-Expose-Headers",
+        corsOpts.headersExposed.join(","),
+      );
+    }
+
+    // Access-Control-Allow-Methods
+    if (corsOpts.methodsAllowed !== undefined) {
+      res.setHeader(
+        "Access-Control-Allow-Methods",
+        corsOpts.methodsAllowed.join(","),
+      );
+    }
+
+    // Access-Control-Max-Age
+    if (corsOpts.maxAge !== undefined) {
+      res.setHeader("Access-Control-Max-Age", corsOpts.maxAge);
+    }
+
+    // Access-Control-Allow-Credentials
+    if (corsOpts.credentialsAllowed) {
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+  }
+
   private async handleHttpReq(
     req: http.IncomingMessage,
     res: http.ServerResponse,
     protocol: "http" | "https",
   ): Promise<void> {
-    // First, make sure we have callbacks for req method
+    let url = new URL(<string>req.url, `${protocol}://${req.headers.host}`);
     let method = <Method>req.method;
+
+    // Check for a CORS preflight request
+    if (method === "OPTIONS") {
+      this.handlePreflightReq(req, res, url);
+      return;
+    }
+
+    // First, make sure we have registered callbacks for req method
     let list = this._methodListMap[method];
 
+    // No list mean no callbacks for that method, i.e. it's unknown
     if (list === undefined) {
       res.statusCode = 404;
       res.end();
@@ -284,7 +448,6 @@ export class HttpMan {
 
     // Next see if we have a registered callback for the HTTP req path
     let found = false;
-    let url = new URL(<string>req.url, `${protocol}://${req.headers.host}`);
 
     for (let el of list) {
       let result = el.matchFunc(url.pathname);
@@ -301,13 +464,6 @@ export class HttpMan {
         middlewareProps: {},
       };
 
-      // // If the req method is POST/PUT/PATCH we need to get the body
-      // if (method === "POST" || method === "PUT" || method === "PATCH") {
-      //   await this.processHttpReqBody(req, res, el, details);
-      // } else {
-      //   // We don't need the body so kick off the middleware
-      //   await this.callMiddleware(req, res, details, el, el.middlewareList);
-      // }
       await this.callMiddleware(req, res, details, el, el.middlewareList);
 
       found = true;
@@ -315,7 +471,7 @@ export class HttpMan {
     }
 
     // If found is still false then we know there is no registered callback
-    if (found === false) {
+    if (!found) {
       res.statusCode = 404;
       res.end();
     }
@@ -341,7 +497,63 @@ export class HttpMan {
         );
       });
     } else {
-      // No more (if there were any) middleware to call so call the callback
+      // Check if this should be a server sent event endpoint
+      if (el.sseEndpointOptions !== undefined) {
+        let sseOpts = el.sseEndpointOptions;
+
+        let lastEventId = <string>req.headers["last-event-id"];
+
+        let sseServer = new SseServer(res, lastEventId);
+        details.sseServer = sseServer;
+
+        // Set up the basics first
+        req.socket.setKeepAlive(true);
+        req.socket.setNoDelay(true);
+        req.socket.setTimeout(0);
+
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Connection", "keep-alive");
+        res.setHeader("Cache-Control", "no-cache");
+        res.statusCode = 200;
+
+        // Check if we should set a new delay interval
+        if (sseOpts.retryInterval !== undefined) {
+          sseServer.setRetry(sseOpts.retryInterval);
+        }
+
+        // Check if we should setup a heartbeat ping
+        if (sseOpts.pingInterval !== undefined) {
+          let event =
+            sseOpts.pingEvent === undefined ? "ping" : sseOpts.pingEvent;
+
+          // We will pass an incremental seqNum with the heartbeat
+          let seqNum = 0;
+
+          // Setup a timer to send the heartbeat
+          let interval = setInterval(() => {
+            sseServer.sendData(seqNum, { event });
+            seqNum += 1;
+          }, sseOpts.pingInterval * 1000);
+
+          // Make sure to stop the timer if the connection closes
+          res.addListener("close", () => {
+            clearInterval(interval);
+          });
+        }
+      }
+
+      // Handle CORS request if it is enabled
+      let corsOpts = el.corsOptions;
+      let origin = req.headers["origin"];
+
+      if (origin !== undefined && corsOpts?.enable === true) {
+        if (
+          corsOpts?.originsAllowed === "*" ||
+          corsOpts?.originsAllowed?.includes(origin)
+        ) {
+          res.setHeader("Access-Control-Allow-Origin", origin);
+        }
+      }
 
       // the callback can be async or not so check for and use a try/catch
       try {
@@ -372,7 +584,7 @@ export class HttpMan {
     for (let cb of this._healthcheckCallbacks) {
       healthy = await cb();
 
-      if (healthy === false) {
+      if (!healthy) {
         break;
       }
     }
@@ -409,8 +621,35 @@ export class HttpMan {
     method: Method,
     path: string,
     callback: EndpointCallback,
-    middlewareList: Middleware[] = [],
+    options: EndpointOptions = {},
   ) {
+    if (options.middlewareList === undefined) {
+      options.middlewareList = [];
+    }
+
+    if (options.sseEndpointOptions !== undefined) {
+      options.sseEndpointOptions = {
+        // Defaults first
+        pingEvent: "ping",
+
+        ...options.sseEndpointOptions,
+      };
+    }
+
+    if (options.corsOptions?.enable) {
+      options.corsOptions = {
+        // Defaults first
+        originsAllowed: "*",
+        headersAllowed: "*",
+        headersExposed: [],
+        methodsAllowed: ["GET", "PUT", "POST", "DELETE", "PATCH"],
+        credentialsAllowed: false,
+        maxAge: 86400,
+
+        ...options.corsOptions,
+      };
+    }
+
     // Make sure we have a list for the method first
     if (this._methodListMap[method] === undefined) {
       this._methodListMap[method] = [];
@@ -422,19 +661,21 @@ export class HttpMan {
       strict: true,
     });
 
-    this._logger.info(
-      HTTP_MAN_TAG,
-      "Adding %s endpoint for path (%s)",
-      method.toUpperCase(),
-      path,
-    );
-
     // Finally add it to the list of callbacks
     this._methodListMap[method].push({
       matchFunc,
       callback,
-      middlewareList: [...middlewareList],
+      middlewareList: [...options.middlewareList],
+      sseEndpointOptions: options.sseEndpointOptions,
+      corsOptions: options.corsOptions,
     });
+
+    this._logger.info(
+      HTTP_MAN_TAG,
+      "Added %s endpoint for path (%s)",
+      method.toUpperCase(),
+      path,
+    );
   }
 
   // Middleware methods here
@@ -511,15 +752,19 @@ export class HttpMan {
           // So, run the validator and let it complain to the user
           let payload = opts.zodInputValidator.safeParse(undefined);
 
-          if (payload.success === false) {
+          if (!payload.success) {
             // Set the error message you want to return
             let errMessage = payload.error.toString();
             res.statusCode = 400;
             res.write(errMessage);
             res.end();
+
+            return;
           }
         }
 
+        // No body to parse so call next middleware and then return
+        await next();
         return;
       }
 
@@ -572,7 +817,7 @@ export class HttpMan {
       }
 
       // If the parsing fails then
-      if (parseOk === false) {
+      if (!parseOk) {
         res.statusCode = 400;
         res.write(errMessage);
         res.end();

@@ -16,13 +16,13 @@ export enum LogLevel {
   TRACE = 400, // Log trace messages
 }
 
-// Interfaces here
-export interface LogConfig {
+// Types here
+export type LogConfig = {
   level: LogLevel;
   timestamp: boolean;
   timestampLocale: string;
   timestampTz: string;
-}
+};
 
 // Logger class here
 export abstract class Logger {
@@ -155,7 +155,7 @@ export abstract class Logger {
 
   protected timestamp(): string {
     // If we are not supposed to generate timestamps then return nothing
-    if (this._timestamps === false) {
+    if (!this._timestamps) {
       return "";
     }
 

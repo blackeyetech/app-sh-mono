@@ -13,8 +13,8 @@ export enum ConfigTypes {
   Number,
 }
 
-// Interfaces here
-export interface ConfigManOptions {
+// Types here
+export type ConfigManOptions = {
   config: string;
   type: ConfigTypes;
   logTag: string;
@@ -23,7 +23,7 @@ export interface ConfigManOptions {
   cmdLineFlag?: string;
   silent?: boolean;
   redact?: boolean;
-}
+};
 
 // Default configs here
 const DEFAULT_CONFIG_OPTIONS = {
@@ -135,7 +135,7 @@ export class ConfigMan {
 
       // We found it, now lets check if we can or should log that we found it
       // NOTE: If we log it we want to indicate is was found on the CLI
-      if (this._logger.started && options.silent === false) {
+      if (this._logger.started && !options.silent) {
         this._logger.startup(
           <string>options.logTag,
           "CLI parameter/flag (%s) = (%j)",
@@ -171,7 +171,7 @@ export class ConfigMan {
       if (strValue !== undefined) {
         // We found it, now lets check if we can or should log that we found it
         // NOTE: If we log it we want to indicate is was found in an env var
-        if (this._logger.started && options.silent === false) {
+        if (this._logger.started && !options.silent) {
           this._logger.startup(
             <string>options.logTag,
             "Env var (%s) = (%j)",
@@ -200,7 +200,7 @@ export class ConfigMan {
 
       // We found it, now lets check if we can or should log that we found it
       // NOTE: If we log it we want to indicate is the default value
-      if (this._logger.started && options.silent === false) {
+      if (this._logger.started && !options.silent) {
         this._logger.startup(
           <string>options.logTag,
           "Default value used for (%s) = (%j)",
