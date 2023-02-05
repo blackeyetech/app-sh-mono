@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.2
+
+### Patch Changes
+
+- Removed zod
+
 ## 1.3.1
 
 ### Patch Changes

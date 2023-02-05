@@ -38,11 +38,9 @@ importers:
     specifiers:
       dotenv: ^16.0.1
       path-to-regexp: ^6.2.1
-      zod: ^3.20.2
     dependencies:
       dotenv: 16.0.3
       path-to-regexp: 6.2.1
-      zod: 3.20.2
 
   plugins/filedb:
     specifiers:

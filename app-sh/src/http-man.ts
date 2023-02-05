@@ -3,7 +3,6 @@ import { AppSh, Logger } from "./app-sh.js";
 import { SseServer, SseServerOptions } from "./sse-server";
 
 import { match, MatchFunction } from "path-to-regexp";
-import { z } from "zod";
 
 import * as http from "node:http";
 import * as https from "node:https";
@@ -677,15 +676,7 @@ export class HttpMan {
     };
   }
 
-  static json(
-    options: {
-      zodInputValidator?: z.ZodTypeAny;
-    } = {},
-  ): Middleware {
-    let opts = {
-      ...options,
-    };
-
+  static json(): Middleware {
     return async (
       req: http.IncomingMessage,
       res: http.ServerResponse,
@@ -700,23 +691,6 @@ export class HttpMan {
       }
 
       if (body === undefined || body.length === 0) {
-        // Check for an input validator
-        if (opts.zodInputValidator !== undefined) {
-          // Since it exists we ASSUME the callback is expecting a JSON payload
-          // So, run the validator and let it complain to the user
-          let payload = opts.zodInputValidator.safeParse(undefined);
-
-          if (!payload.success) {
-            // Set the error message you want to return
-            let errMessage = payload.error.toString();
-            res.statusCode = 400;
-            res.write(errMessage);
-            res.end();
-
-            return;
-          }
-        }
-
         // No body to parse so call next middleware and then return
         await next();
         return;
@@ -756,21 +730,7 @@ export class HttpMan {
         }
       }
 
-      if (jsonBody !== undefined && opts.zodInputValidator !== undefined) {
-        let data = opts.zodInputValidator.safeParse(jsonBody);
-
-        if (data.success) {
-          // This will ensure addtional properties are only passed in if
-          // the zod schema allows it
-          jsonBody = data.data;
-        } else {
-          // Set the error message you want to return
-          errMessage = data.error.toString();
-          parseOk = false;
-        }
-      }
-
-      // If the parsing fails then
+      // If the parsing failed then return an error
       if (!parseOk) {
         res.statusCode = 400;
         res.write(errMessage);
