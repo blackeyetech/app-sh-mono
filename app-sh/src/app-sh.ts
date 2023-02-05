@@ -268,7 +268,7 @@ export class AppSh {
 
     // If there was a finally handler provided then call it third
     if (this._finally !== undefined) {
-      this.shutdown("Calling the finally handler ...");
+      this.shutdown("Calling the 'finally handler' ...");
 
       await this._finally().catch((e) => {
         this.error(e);

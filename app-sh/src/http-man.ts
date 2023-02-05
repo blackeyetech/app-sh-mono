@@ -1,6 +1,6 @@
 // imports here
 import { AppSh, Logger } from "./app-sh.js";
-import { SseServer } from "./sse-server";
+import { SseServer, SseServerOptions } from "./sse-server";
 
 import { match, MatchFunction } from "path-to-regexp";
 import { z } from "zod";
@@ -10,7 +10,7 @@ import * as https from "node:https";
 import * as os from "node:os";
 import * as fs from "node:fs";
 
-export { SseServer };
+export { SseServer, SseServerOptions };
 
 // Types here
 export type Middleware = (
@@ -21,12 +21,6 @@ export type Middleware = (
 ) => Promise<void>;
 
 export type HealthcheckCallback = () => Promise<boolean>;
-
-export type SseEndpointOptions = {
-  retryInterval?: number; // In seconds
-  pingInterval?: number; // In seconds
-  pingEvent?: string;
-};
 
 export type CorsOptions = {
   enable: boolean;
@@ -41,7 +35,7 @@ export type CorsOptions = {
 
 export type EndpointOptions = {
   middlewareList?: Middleware[];
-  sseEndpointOptions?: SseEndpointOptions;
+  sseServerOptions?: SseServerOptions;
   corsOptions?: CorsOptions;
 };
 
@@ -63,7 +57,7 @@ type MethodListElement = {
   callback: EndpointCallback;
 
   middlewareList: Middleware[];
-  sseEndpointOptions?: SseEndpointOptions;
+  sseServerOptions?: SseServerOptions;
   corsOptions?: CorsOptions;
 };
 
@@ -497,79 +491,52 @@ export class HttpMan {
         );
       });
     } else {
-      // Check if this should be a server sent event endpoint
-      if (el.sseEndpointOptions !== undefined) {
-        let sseOpts = el.sseEndpointOptions;
+      await this.callEndpoint(req, res, details, el);
+    }
+  }
 
-        let lastEventId = <string>req.headers["last-event-id"];
+  private async callEndpoint(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    details: EndpointCallbackDetails,
+    el: MethodListElement,
+  ): Promise<void> {
+    // Handle CORS request if it is enabled
+    let corsOpts = el.corsOptions;
+    let origin = req.headers["origin"];
 
-        let sseServer = new SseServer(res, lastEventId);
-        details.sseServer = sseServer;
-
-        // Set up the basics first
-        req.socket.setKeepAlive(true);
-        req.socket.setNoDelay(true);
-        req.socket.setTimeout(0);
-
-        res.setHeader("Content-Type", "text/event-stream");
-        res.setHeader("Connection", "keep-alive");
-        res.setHeader("Cache-Control", "no-cache");
-        res.statusCode = 200;
-
-        // Check if we should set a new delay interval
-        if (sseOpts.retryInterval !== undefined) {
-          sseServer.setRetry(sseOpts.retryInterval);
-        }
-
-        // Check if we should setup a heartbeat ping
-        if (sseOpts.pingInterval !== undefined) {
-          let event =
-            sseOpts.pingEvent === undefined ? "ping" : sseOpts.pingEvent;
-
-          // We will pass an incremental seqNum with the heartbeat
-          let seqNum = 0;
-
-          // Setup a timer to send the heartbeat
-          let interval = setInterval(() => {
-            sseServer.sendData(seqNum, { event });
-            seqNum += 1;
-          }, sseOpts.pingInterval * 1000);
-
-          // Make sure to stop the timer if the connection closes
-          res.addListener("close", () => {
-            clearInterval(interval);
-          });
-        }
+    if (origin !== undefined && corsOpts?.enable === true) {
+      if (corsOpts?.credentialsAllowed === true) {
+        res.setHeader("Access-Control-Allow-Credentials", "true");
       }
 
-      // Handle CORS request if it is enabled
-      let corsOpts = el.corsOptions;
-      let origin = req.headers["origin"];
-
-      if (origin !== undefined && corsOpts?.enable === true) {
-        if (
-          corsOpts?.originsAllowed === "*" ||
-          corsOpts?.originsAllowed?.includes(origin)
-        ) {
-          res.setHeader("Access-Control-Allow-Origin", origin);
-        }
+      if (
+        corsOpts?.originsAllowed === "*" ||
+        corsOpts?.originsAllowed?.includes(origin)
+      ) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
       }
+    }
 
-      // the callback can be async or not so check for and use a try/catch
-      try {
-        if (el.callback.constructor.name === "AsyncFunction") {
-          // This is async so use await
-          await el.callback(req, res, details);
-        } else {
-          // This is a synchronous call
-          el.callback(req, res, details);
-        }
-      } catch (e) {
-        if (e instanceof HttpError) {
-          res.statusCode = e.status;
-          res.write(e.message);
-          res.end();
-        }
+    // Check if this should be a server sent event endpoint
+    if (el.sseServerOptions !== undefined) {
+      details.sseServer = new SseServer(req, res, el.sseServerOptions);
+    }
+
+    // The callback can be async or not so check it out
+    try {
+      if (el.callback.constructor.name === "AsyncFunction") {
+        // This is async so use await
+        await el.callback(req, res, details);
+      } else {
+        // This is a synchronous call
+        el.callback(req, res, details);
+      }
+    } catch (e) {
+      if (e instanceof HttpError) {
+        res.statusCode = e.status;
+        res.write(e.message);
+        res.end();
       }
     }
   }
@@ -609,10 +576,6 @@ export class HttpMan {
     return;
   }
 
-  // addMiddleware(middleware: Middleware): void {
-  //   this._middlewareList.push(middleware);
-  // }
-
   healthcheck(callback: HealthcheckCallback) {
     this._healthcheckCallbacks.push(callback);
   }
@@ -625,15 +588,6 @@ export class HttpMan {
   ) {
     if (options.middlewareList === undefined) {
       options.middlewareList = [];
-    }
-
-    if (options.sseEndpointOptions !== undefined) {
-      options.sseEndpointOptions = {
-        // Defaults first
-        pingEvent: "ping",
-
-        ...options.sseEndpointOptions,
-      };
     }
 
     if (options.corsOptions?.enable) {
@@ -666,7 +620,7 @@ export class HttpMan {
       matchFunc,
       callback,
       middlewareList: [...options.middlewareList],
-      sseEndpointOptions: options.sseEndpointOptions,
+      sseServerOptions: options.sseServerOptions,
       corsOptions: options.corsOptions,
     });
 

@@ -137,8 +137,9 @@ sh.httpMan.endpoint(
     middlewareList: [HttpMan.body(), HttpMan.json(), middleware1, middleware2],
     corsOptions: {
       enable: true,
-      headersAllowed: ["x-header"],
-      originsAllowed: ["http://127.0.0.1:8081"],
+      headersAllowed: "*",
+      originsAllowed: ["https://test-cors.org"],
+      credentialsAllowed: true,
     },
   },
 );

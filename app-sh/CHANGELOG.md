@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.1
+
+### Patch Changes
+
+- Minor tidy up of SseServer code
+
 ## 1.3.0
 
 ### Minor Changes
