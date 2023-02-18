@@ -8,7 +8,9 @@ import {
   Middleware,
   EndpointCallback,
   EndpointCallbackDetails,
+  HttpConfig,
   HttpError,
+  HttpConfigError,
 } from "./http-man";
 
 import * as readline from "node:readline";
@@ -21,7 +23,9 @@ export {
   Middleware,
   EndpointCallback,
   EndpointCallbackDetails,
+  HttpConfig,
   HttpError,
+  HttpConfigError,
 };
 
 // Misc consts here
@@ -47,8 +51,6 @@ export type AppShConfig = {
   logTimestamp?: boolean;
   logTimestampLocale?: string;
   logTimestampTz?: string;
-
-  enableHttpMan?: boolean;
 };
 
 export type QuestionOptions = {
@@ -121,7 +123,7 @@ export class AppSh {
     stopMethod: () => Promise<void>;
   }[];
 
-  private _httpMan?: HttpMan;
+  private _httpManList: HttpMan[];
 
   private _finally?: () => Promise<void>;
 
@@ -138,8 +140,6 @@ export class AppSh {
         logTimestamp: false,
         logTimestampLocale: "ISO",
         logTimestampTz: "UTC",
-
-        enableHttpMan: true,
       },
       ...appShConfig,
     };
@@ -150,6 +150,7 @@ export class AppSh {
 
     this._appVersion = config.appVersion;
     this._plugins = [];
+    this._httpManList = [];
 
     // If a logger has been past in ...
     if (config?.logger !== undefined) {
@@ -193,10 +194,6 @@ export class AppSh {
       });
     }
 
-    if (config.enableHttpMan) {
-      this._httpMan = new HttpMan({ appSh: this });
-    }
-
     this.startup("Ready to Rock and Roll baby!");
   }
 
@@ -224,12 +221,8 @@ export class AppSh {
     return this._configMan;
   }
 
-  get httpMan(): HttpMan | undefined {
-    return this._httpMan;
-  }
-
   // Setters here
-  set level(level: LogLevel) {
+  set logLevel(level: LogLevel) {
     this._logger.level = level;
   }
 
@@ -255,9 +248,9 @@ export class AppSh {
   async exit(code: number, hard: boolean = true): Promise<void> {
     this.shutdown("Exiting ...");
 
-    // Make sure we stop the HttpMan - probably best to do it first
-    if (this._httpMan !== undefined) {
-      await this._httpMan.stop();
+    // Make sure we stop all of the HttpMan - probably best to do it first
+    for (let httpMan of this._httpManList) {
+      await httpMan.stop();
     }
 
     // Stop the application second
@@ -291,6 +284,18 @@ export class AppSh {
     if (hard) {
       process.exit(code);
     }
+  }
+
+  addHttpMan(
+    networkInterface: string,
+    networkPort: number,
+    httpConfig: HttpConfig = {},
+  ): HttpMan {
+    let httpMan = new HttpMan(this, networkInterface, networkPort, httpConfig);
+
+    this._httpManList.push(httpMan);
+
+    return httpMan;
   }
 
   // Config helper methods here

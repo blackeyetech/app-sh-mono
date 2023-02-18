@@ -25,6 +25,14 @@ export type ConfigManOptions = {
   redact?: boolean;
 };
 
+export class ConfigError {
+  message: string;
+
+  constructor(message: string) {
+    this.message = message;
+  }
+}
+
 // Default configs here
 const DEFAULT_CONFIG_OPTIONS = {
   silent: false,
@@ -190,7 +198,7 @@ export class ConfigMan {
       // If the default was not provided then the config WAS required
       if (options.defaultVal === undefined) {
         // In this scenario we need to throw an error
-        throw Error(
+        throw new ConfigError(
           `Config parameter (${options.config}) not set on the CLI or as an env var!`,
         );
       }

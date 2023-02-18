@@ -1,11 +1,10 @@
 // imports here
-
 import * as http from "node:http";
 
 export type SseServerOptions = {
   retryInterval?: number; // In seconds
   pingInterval?: number; // In seconds
-  pingEvent?: string;
+  pingEventName?: string;
 };
 
 // SseServer class here
@@ -20,7 +19,9 @@ export class SseServer {
   ) {
     let opts = {
       // Defaults first
-      pingEvent: "ping",
+      retryInterval: 0,
+      pingInterval: 0,
+      pingEventName: "ping",
 
       ...sseOptions,
     };
@@ -39,13 +40,14 @@ export class SseServer {
     res.statusCode = 200;
 
     // Check if we should set a new delay interval
-    if (opts.retryInterval !== undefined) {
+    if (opts.retryInterval > 0) {
       this.setRetry(opts.retryInterval);
     }
 
     // Check if we should setup a heartbeat ping
-    if (opts.pingInterval !== undefined) {
-      let event = opts.pingEvent === undefined ? "ping" : opts.pingEvent;
+    if (opts.pingInterval > 0) {
+      let event =
+        opts.pingEventName === undefined ? "ping" : opts.pingEventName;
 
       // We will pass an incremental seqNum with the heartbeat
       let seqNum = 0;

@@ -18,11 +18,10 @@ import { z } from "zod";
 class App extends AppSh {
   constructor() {
     super({
-      enableHttpMan: true,
       logLevel: LogLevel.TRACE,
       logTimestampLocale: "en-us",
       logTimestampTz: "EET",
-      logTimestamp: true,
+      logTimestamp: false,
       catchExceptions: true,
       exitOnUnhandledExceptions: false,
     });
@@ -77,11 +76,18 @@ sh.info("%j", res);
 
 sh.trace("Traced!");
 
-let httpMan = sh.httpMan;
+let httpMan1 = sh.addHttpMan("lo", 8080, {
+  loggerTag: "HttpMan1",
+  defaultMiddlewareList: [HttpMan.body(), HttpMan.json()],
+});
 
+let httpMan2 = sh.addHttpMan("lo", 8081, {
+  loggerTag: "HttpMan2",
+  defaultMiddlewareList: [HttpMan.body(), HttpMan.json()],
+});
 // httpMan.healthcheck(() => {
 //   sh.info("Helllo!!!");
-//   return true;
+//   return false;
 // });
 // // sh.sleep(2);
 
@@ -112,29 +118,29 @@ const User = z.object({
   b: z.string(),
 });
 
-sh.httpMan.endpoint(
+httpMan1.endpoint(
   "POST",
   "/test/:id",
   (req, res, details) => {
-    // res.setHeader("Access-Control-Allow-Origin", "*");
+    // // res.setHeader("Access-Control-Allow-Origin", "*");
 
-    // sh.info("q=%s", details.url.searchParams.get("q"));
-    // sh.info("r=%s", details.url.searchParams.get("r"));
-    // sh.info("id=%s", details.params.id);
-    sh.info("body=%s", details.middlewareProps.body);
-    sh.info("jsonBody=%s", details.middlewareProps.json);
-    // sh.info("headers=%s", req.headers);
+    // // sh.info("q=%s", details.url.searchParams.get("q"));
+    // // sh.info("r=%s", details.url.searchParams.get("r"));
+    // // sh.info("id=%s", details.params.id);
+    // sh.info("body=%s", details.middlewareProps.body);
+    // sh.info("jsonBody=%s", details.middlewareProps.json);
+    // // sh.info("headers=%s", req.headers);
 
-    if (details.params.id === "1") {
-      throw new HttpError(400, "fool!");
-    }
+    // if (details.params.id === "1") {
+    //   throw new HttpError(400, "fool!");
+    // }
 
     res.statusCode = 200;
-    res.end();
+    res.json = { hello: "kieran" };
   },
 
   {
-    middlewareList: [HttpMan.body(), HttpMan.json(), middleware1, middleware2],
+    middlewareList: [middleware1, middleware2],
     corsOptions: {
       enable: true,
       headersAllowed: "*",
@@ -143,6 +149,11 @@ sh.httpMan.endpoint(
     },
   },
 );
+
+httpMan1.endpoint("GET", "/test/:id", (req, res, details) => {
+  res.json = { hello: "kieran" };
+  res.json = "hello";
+});
 
 let pong = (req, res, details) => {
   sh.info("pinged");
@@ -168,14 +179,14 @@ let pong = (req, res, details) => {
   );
 };
 
-httpMan.endpoint("GET", "/ping", pong, {
-  sseEndpoint: { pingInterval: 10, pingEvent: "ev1" },
+httpMan1.endpoint("GET", "/ping", pong, {
+  sseEndpoint: { pingInterval: 10, pingEventName: "ev1" },
 });
 
-httpMan.endpoint("GET", "/", (req, res, details) => {
-  console.log("/");
-  res.setHeader("content-type", "text/html; charset=utf-8");
-  res.write("<html><p>Hello</p></html>");
-  res.statusCode = 200;
-  res.end();
+httpMan1.endpoint("GET", "/", (req, res, details) => {
+  res.html = "<html><p>Hello from 1</p></html>";
+});
+
+httpMan2.endpoint("GET", "/", (req, res, details) => {
+  res.text = "<html><p>Hello from 2</p></html>";
 });

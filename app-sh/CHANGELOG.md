@@ -1,5 +1,13 @@
 # app-sh
 
+## 1.3.3
+
+### Patch Changes
+
+- - Added ability to add default middlewares when create a HttpManager
+  - Can now create multiple HttpManagers
+  - Now handling json, html and text returns type automatically
+
 ## 1.3.2
 
 ### Patch Changes

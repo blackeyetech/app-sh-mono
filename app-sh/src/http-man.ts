@@ -2,7 +2,7 @@
 import { AppSh, Logger } from "./app-sh.js";
 import { SseServer, SseServerOptions } from "./sse-server";
 
-import { match, MatchFunction } from "path-to-regexp";
+import * as PathToRegEx from "path-to-regexp";
 
 import * as http from "node:http";
 import * as https from "node:https";
@@ -14,7 +14,7 @@ export { SseServer, SseServerOptions };
 // Types here
 export type Middleware = (
   req: http.IncomingMessage,
-  res: http.ServerResponse,
+  res: HttpServerResponse,
   details: EndpointCallbackDetails,
   next: () => Promise<void>,
 ) => Promise<void>;
@@ -33,6 +33,7 @@ export type CorsOptions = {
 };
 
 export type EndpointOptions = {
+  noDefaultMiddlewares?: boolean;
   middlewareList?: Middleware[];
   sseServerOptions?: SseServerOptions;
   corsOptions?: CorsOptions;
@@ -47,12 +48,18 @@ export type EndpointCallbackDetails = {
 
 export type EndpointCallback = (
   req: http.IncomingMessage,
-  res: http.ServerResponse,
+  res: HttpServerResponse,
   details: EndpointCallbackDetails,
 ) => Promise<void> | void;
 
+export class HttpServerResponse extends http.ServerResponse {
+  json?: object | [] | string | number | boolean;
+  html?: string | Buffer;
+  text?: string | Buffer;
+}
+
 type MethodListElement = {
-  matchFunc: MatchFunction<object>;
+  matchFunc: PathToRegEx.MatchFunction<object>;
   callback: EndpointCallback;
 
   middlewareList: Middleware[];
@@ -72,8 +79,16 @@ export class HttpError {
   }
 }
 
+export class HttpConfigError {
+  message: string;
+
+  constructor(message: string) {
+    this.message = message;
+  }
+}
+
 export type HttpConfig = {
-  appSh: AppSh;
+  loggerTag?: string;
 
   // NOTE: The default node keep alive is 5 secs. This needs to be set
   // higher then any load balancers in front of this App
@@ -83,138 +98,111 @@ export type HttpConfig = {
   // timeout. See - https://github.com/nodejs/node/issues/27363
   headerTimeout?: number;
 
-  networkInterface?: string;
-  networkPort?: number;
-
   healthcheckPath?: string;
   healthcheckGoodRes?: number;
   healthcheckBadRes?: number;
 
   enableHttps?: boolean;
+  httpsKeyFile?: string;
+  httpsCertFile?: string;
+
+  defaultMiddlewareList?: Middleware[];
 };
-
-// Config consts here
-const CFG_HTTP_KEEP_ALIVE_TIMEOUT = "HTTP_KEEP_ALIVE_TIMEOUT";
-const CFG_HTTP_HEADER_TIMEOUT = "HTTP_HEADER_TIMEOUT";
-
-const CFG_HTTP_NETWORK_INTERFACE = "HTTP_NETWORK_INTERFACE";
-const CFG_HTTP_NETWORK_PORT = "HTTP_NETWORK_PORT";
-
-const CFG_HTTP_HEALTHCHECK_PATH = "HTTP_HEALTHCHECK_PATH";
-const CFG_HTTP_HEALTHCHECK_GOOD_RES = "HTTP_HEALTHCHECK_GOOD_RES";
-const CFG_HTTP_HEALTHCHECK_BAD_RES = "HTTP_HEALTHCHECK_BAD_RES";
-
-const CFG_HTTP_ENABLE_HTTPS = "HTTP_ENABLE_HTTPS";
-const CFG_HTTP_KEY_FILE = "HTTP_KEY_FILE";
-const CFG_HTTP_CERT_FILE = "HTTP_CERT_FILE";
-
-const HTTP_MAN_TAG = "HttpMan";
 
 // HttpMan class here
 export class HttpMan {
-  private _sh: AppSh;
-  private _logger: Logger;
+  private _networkInterface: string;
+  private _networkPort: number;
 
-  // private _middlewareList: Middleware[];
+  private _loggerTag: string;
+  private _logger: Logger;
   private _healthcheckCallbacks: HealthcheckCallback[];
   private _methodListMap: Record<string, MethodListElement[]>;
 
   private _httpKeepAliveTimeout: number;
   private _httpHeaderTimeout: number;
 
-  private _networkInterface: string;
-  private _networkPort: number;
-  private _enableHttps: boolean;
-
   private _healthCheckPath: string;
   private _healthCheckGoodResCode: number;
   private _healthCheckBadResCode: number;
 
+  private _enableHttps: boolean;
+  private _keyFile?: string;
+  private _certFile?: string;
+
+  private _defaultMiddlewareList: Middleware[];
+
   private _server?: http.Server;
   private _ip?: string;
 
-  constructor(httpConfig: HttpConfig) {
+  constructor(
+    appSh: AppSh,
+    networkInterface: string,
+    networkPort: number,
+    httpConfig: HttpConfig = {},
+  ) {
     let config = {
       ...{
+        loggerTag: `HttpMan-${networkInterface}-${networkPort}`,
+
         keepAliveTimeout: 65000,
         headerTimeout: 66000,
-
-        networkInterface: "lo",
-        networkPort: 8080,
 
         healthcheckPath: "/healthcheck",
         healthcheckGoodRes: 200,
         healthcheckBadRes: 503,
 
         enableHttps: false,
+
+        defaultMiddlewareList: [],
       },
       ...httpConfig,
     };
 
-    this._sh = config.appSh;
-    this._logger = config.appSh.logger;
-    this._enableHttps = config.enableHttps;
+    this._logger = appSh.logger;
+    this._loggerTag = config.loggerTag;
 
-    this._logger.startup(HTTP_MAN_TAG, "Initialising HTTP manager ...");
+    this._logger.startup(this._loggerTag, "Initialising HTTP manager ...");
 
-    // this._middlewareList = [];
+    this._networkInterface = networkInterface;
+    this._networkPort = networkPort;
+
     this._healthcheckCallbacks = [];
     this._methodListMap = {};
 
-    this._httpKeepAliveTimeout = this._sh.getConfigNum(
-      CFG_HTTP_KEEP_ALIVE_TIMEOUT,
-      config.keepAliveTimeout,
-    );
+    this._httpKeepAliveTimeout = config.keepAliveTimeout;
+    this._httpHeaderTimeout = config.headerTimeout;
 
-    this._httpHeaderTimeout = this._sh.getConfigNum(
-      CFG_HTTP_HEADER_TIMEOUT,
-      config.headerTimeout,
-    );
+    this._healthCheckPath = config.healthcheckPath;
+    this._healthCheckGoodResCode = config.healthcheckGoodRes;
+    this._healthCheckBadResCode = config.healthcheckBadRes;
 
-    this._networkInterface = this._sh.getConfigStr(
-      CFG_HTTP_NETWORK_INTERFACE,
-      config.networkInterface,
-    );
+    this._enableHttps = config.enableHttps;
 
-    this._networkPort = this._sh.getConfigNum(
-      CFG_HTTP_NETWORK_PORT,
-      config.networkPort,
-    );
+    if (this._enableHttps) {
+      this._keyFile = config.httpsKeyFile;
+      this._certFile = config.httpsKeyFile;
+    }
 
-    this._healthCheckPath = this._sh.getConfigStr(
-      CFG_HTTP_HEALTHCHECK_PATH,
-      config.healthcheckPath,
-    );
-
-    this._healthCheckGoodResCode = this._sh.getConfigNum(
-      CFG_HTTP_HEALTHCHECK_GOOD_RES,
-      config.healthcheckGoodRes,
-    );
-
-    this._healthCheckBadResCode = this._sh.getConfigNum(
-      CFG_HTTP_HEALTHCHECK_BAD_RES,
-      config.healthcheckBadRes,
-    );
-
-    this._enableHttps = this._sh.getConfigBool(
-      CFG_HTTP_ENABLE_HTTPS,
-      config.enableHttps,
-    );
+    this._defaultMiddlewareList = config.defaultMiddlewareList;
 
     this.setupHttpServer();
 
-    this._logger.startup(HTTP_MAN_TAG, "Now listening. HTTP manager started!");
+    this._logger.startup(
+      this._loggerTag,
+      "Now listening. HTTP manager started!",
+    );
   }
 
   // Private methods here
   private setupHttpServer(): void {
     this._logger.startup(
-      HTTP_MAN_TAG,
+      this._loggerTag,
       `Finding IP for interface (${this._networkInterface})`,
     );
 
     let ifaces = os.networkInterfaces();
-    this._logger.startup(HTTP_MAN_TAG, "Interfaces on host: %j", ifaces);
+    this._logger.startup(this._loggerTag, "Interfaces on host: %j", ifaces);
 
     if (ifaces[this._networkInterface] === undefined) {
       throw new Error(
@@ -231,11 +219,11 @@ export class HttpMan {
     if (found !== undefined) {
       this._ip = found.address;
       this._logger.startup(
-        HTTP_MAN_TAG,
+        this._loggerTag,
         `Found IP (${this._ip}) for interface ${this._networkInterface}`,
       );
       this._logger.startup(
-        HTTP_MAN_TAG,
+        this._loggerTag,
         `Will listen on interface ${this._networkInterface} (IP: ${this._ip})`,
       );
     }
@@ -248,16 +236,24 @@ export class HttpMan {
 
     // Create either a HTTP or HTTPS server
     if (this._enableHttps) {
-      let keyfile = this._sh.getConfigStr(CFG_HTTP_KEY_FILE);
-      let certFile = this._sh.getConfigStr(CFG_HTTP_CERT_FILE);
+      if (this._keyFile === undefined) {
+        throw new HttpConfigError(
+          "HTTPS is enabled but no key file pprovided!",
+        );
+      }
+      if (this._certFile === undefined) {
+        throw new HttpConfigError(
+          "HTTPS is enabled but no cert file pprovided!",
+        );
+      }
 
       const options = {
-        key: fs.readFileSync(keyfile),
-        cert: fs.readFileSync(certFile),
+        key: fs.readFileSync(this._keyFile),
+        cert: fs.readFileSync(this._certFile),
       };
 
       this._logger.startup(
-        HTTP_MAN_TAG,
+        this._loggerTag,
         `Attempting to listen on (https://${this._ip}:${this._networkPort})`,
       );
 
@@ -268,7 +264,7 @@ export class HttpMan {
         .listen(this._networkPort, this._ip);
     } else {
       this._logger.startup(
-        HTTP_MAN_TAG,
+        this._loggerTag,
         `Attempting to listen on (http://${this._ip}:${this._networkPort})`,
       );
 
@@ -281,7 +277,6 @@ export class HttpMan {
     this._server.headersTimeout = this._httpHeaderTimeout;
 
     // Now we need to add an endpoint for healthchecks
-    //NOTE: This being added BEFORE any middleware
     this.endpoint("GET", this._healthCheckPath, (req, res, details) =>
       this.healthcheckCallback(req, res, details),
     );
@@ -289,16 +284,10 @@ export class HttpMan {
 
   private handlePreflightReq(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     url: URL,
   ): void {
-    // TODO - remove
-    console.log(req.method, ":", req.url);
-    for (let h in req.headers) {
-      console.log(h, ":", req.headers[h]);
-    }
-
-    // Get the method and origin. both MUST be available or its not valid
+    // Get the method and origin. Both MUST be available or its not valid
     let method = req.headers["access-control-request-method"];
     let origin = req.headers["origin"];
 
@@ -348,7 +337,7 @@ export class HttpMan {
 
   private setCorsHeaders(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     foundEl: MethodListElement,
     origin: string,
   ) {
@@ -417,7 +406,7 @@ export class HttpMan {
 
   private async handleHttpReq(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     protocol: "http" | "https",
   ): Promise<void> {
     let url = new URL(<string>req.url, `${protocol}://${req.headers.host}`);
@@ -472,7 +461,7 @@ export class HttpMan {
 
   private async callMiddleware(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     details: EndpointCallbackDetails,
     el: MethodListElement,
     middlewareStack: Middleware[],
@@ -496,7 +485,7 @@ export class HttpMan {
 
   private async callEndpoint(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     details: EndpointCallbackDetails,
     el: MethodListElement,
   ): Promise<void> {
@@ -522,7 +511,7 @@ export class HttpMan {
       details.sseServer = new SseServer(req, res, el.sseServerOptions);
     }
 
-    // The callback can be async or not so check it out
+    // The callback can be async or not so check for it
     try {
       if (el.callback.constructor.name === "AsyncFunction") {
         // This is async so use await
@@ -531,18 +520,63 @@ export class HttpMan {
         // This is a synchronous call
         el.callback(req, res, details);
       }
+
+      // Now see if the user wants us to handle their response
+      this.handleUserResponse(res);
     } catch (e) {
       if (e instanceof HttpError) {
         res.statusCode = e.status;
         res.write(e.message);
         res.end();
+      } else {
+        // We don't know what this is so log it and leave it alone!
+        this._logger.error(
+          this._loggerTag,
+          "Unknown error happened while handling URL (%s) - (%s)",
+          details.url.pathname,
+          e,
+        );
       }
+    }
+  }
+
+  private handleUserResponse(res: HttpServerResponse) {
+    // Check if the user wants to return a JSON payload
+    if (res.json !== undefined) {
+      let body = JSON.stringify(res.json);
+
+      res.setHeader("content-type", "application/json; charset=utf-8");
+      res.setHeader("content-length", Buffer.byteLength(body));
+      res.write(body);
+      res.end();
+
+      return;
+    }
+
+    // Check if the user wants to return HTML
+    if (res.html !== undefined) {
+      res.setHeader("content-type", "text/html; charset=utf-8");
+      res.setHeader("content-length", Buffer.byteLength(res.html));
+      res.write(res.html);
+      res.end();
+
+      return;
+    }
+
+    // Check if the user wants to return just plain olde text
+    if (res.text !== undefined) {
+      res.setHeader("content-type", "text/plain; charset=utf-8");
+      res.setHeader("content-length", Buffer.byteLength(res.text));
+      res.write(res.text);
+      res.end();
+
+      return;
     }
   }
 
   private async healthcheckCallback(
     _1: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: HttpServerResponse,
     _2: EndpointCallbackDetails,
   ): Promise<void> {
     let healthy = true;
@@ -567,9 +601,12 @@ export class HttpMan {
   // Public methods here
   async stop(): Promise<void> {
     if (this._server !== undefined) {
-      this._logger.shutdown(HTTP_MAN_TAG, "Closing HTTP manager port now ...");
+      this._logger.shutdown(
+        this._loggerTag,
+        "Closing HTTP manager port now ...",
+      );
       this._server.close();
-      this._logger.shutdown(HTTP_MAN_TAG, "Port closed");
+      this._logger.shutdown(this._loggerTag, "Port closed");
     }
 
     return;
@@ -585,10 +622,6 @@ export class HttpMan {
     callback: EndpointCallback,
     options: EndpointOptions = {},
   ) {
-    if (options.middlewareList === undefined) {
-      options.middlewareList = [];
-    }
-
     if (options.corsOptions?.enable) {
       options.corsOptions = {
         // Defaults first
@@ -609,22 +642,35 @@ export class HttpMan {
     }
 
     // Then create the matching function
-    let matchFunc = match(path, {
+    let matchFunc = PathToRegEx.match(path, {
       decode: decodeURIComponent,
       strict: true,
     });
+
+    // Make sure we have the middlewares requested
+    let middlewareList: Middleware[] = [];
+
+    // Check if the user DID NOT ask for no default middlewares
+    if (options.noDefaultMiddlewares !== true) {
+      // ... stick the default middlewares in first
+      middlewareList = [...this._defaultMiddlewareList];
+    }
+
+    if (options.middlewareList !== undefined) {
+      middlewareList = [...middlewareList, ...options.middlewareList];
+    }
 
     // Finally add it to the list of callbacks
     this._methodListMap[method].push({
       matchFunc,
       callback,
-      middlewareList: [...options.middlewareList],
+      middlewareList,
       sseServerOptions: options.sseServerOptions,
       corsOptions: options.corsOptions,
     });
 
     this._logger.info(
-      HTTP_MAN_TAG,
+      this._loggerTag,
       "Added %s endpoint for path (%s)",
       method.toUpperCase(),
       path,
@@ -640,7 +686,7 @@ export class HttpMan {
 
     return async (
       req: http.IncomingMessage,
-      res: http.ServerResponse,
+      res: HttpServerResponse,
       details: EndpointCallbackDetails,
       next: () => Promise<void>,
     ): Promise<void> => {
@@ -679,7 +725,7 @@ export class HttpMan {
   static json(): Middleware {
     return async (
       req: http.IncomingMessage,
-      res: http.ServerResponse,
+      res: HttpServerResponse,
       details: EndpointCallbackDetails,
       next: () => Promise<void>,
     ): Promise<void> => {
