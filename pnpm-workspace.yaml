@@ -1,3 +1,6 @@
 packages:
   - app-sh
+  - plugins/o365
+  - plugins/postgresql
+  - plugins/jira
   - testing

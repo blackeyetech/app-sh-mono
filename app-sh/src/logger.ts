@@ -126,8 +126,8 @@ export abstract class Logger {
   abstract fatal(tag: string, ...args: any): void;
   abstract error(tag: string, ...args: any): void;
   abstract warn(tag: string, ...args: any): void;
-  abstract startup(tag: string, ...args: any): void;
-  abstract shutdown(tag: string, ...args: any): void;
+  abstract startupMsg(tag: string, ...args: any): void;
+  abstract shutdownMsg(tag: string, ...args: any): void;
   abstract info(tag: string, ...args: any): void;
   abstract debug(tag: string, ...args: any): void;
   abstract trace(tag: string, ...args: any): void;

@@ -1,7 +1,7 @@
 // imports here
 import { AppSh, AppShPlugin } from "app-sh";
 
-// Interfaces here
+// Types here
 
 // Config consts here
 
@@ -23,5 +23,5 @@ export class Template extends AppShPlugin {
 
   // Private methods here
 
-  // Public methos here
+  // Public methods here
 }

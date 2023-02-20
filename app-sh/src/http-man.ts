@@ -142,27 +142,26 @@ export class HttpMan {
     httpConfig: HttpConfig = {},
   ) {
     let config = {
-      ...{
-        loggerTag: `HttpMan-${networkInterface}-${networkPort}`,
+      loggerTag: `HttpMan-${networkInterface}-${networkPort}`,
 
-        keepAliveTimeout: 65000,
-        headerTimeout: 66000,
+      keepAliveTimeout: 65000,
+      headerTimeout: 66000,
 
-        healthcheckPath: "/healthcheck",
-        healthcheckGoodRes: 200,
-        healthcheckBadRes: 503,
+      healthcheckPath: "/healthcheck",
+      healthcheckGoodRes: 200,
+      healthcheckBadRes: 503,
 
-        enableHttps: false,
+      enableHttps: false,
 
-        defaultMiddlewareList: [],
-      },
+      defaultMiddlewareList: [],
+
       ...httpConfig,
     };
 
     this._logger = appSh.logger;
     this._loggerTag = config.loggerTag;
 
-    this._logger.startup(this._loggerTag, "Initialising HTTP manager ...");
+    this._logger.startupMsg(this._loggerTag, "Initialising HTTP manager ...");
 
     this._networkInterface = networkInterface;
     this._networkPort = networkPort;
@@ -188,7 +187,7 @@ export class HttpMan {
 
     this.setupHttpServer();
 
-    this._logger.startup(
+    this._logger.startupMsg(
       this._loggerTag,
       "Now listening. HTTP manager started!",
     );
@@ -196,13 +195,13 @@ export class HttpMan {
 
   // Private methods here
   private setupHttpServer(): void {
-    this._logger.startup(
+    this._logger.startupMsg(
       this._loggerTag,
       `Finding IP for interface (${this._networkInterface})`,
     );
 
     let ifaces = os.networkInterfaces();
-    this._logger.startup(this._loggerTag, "Interfaces on host: %j", ifaces);
+    this._logger.startupMsg(this._loggerTag, "Interfaces on host: %j", ifaces);
 
     if (ifaces[this._networkInterface] === undefined) {
       throw new Error(
@@ -218,11 +217,11 @@ export class HttpMan {
     );
     if (found !== undefined) {
       this._ip = found.address;
-      this._logger.startup(
+      this._logger.startupMsg(
         this._loggerTag,
         `Found IP (${this._ip}) for interface ${this._networkInterface}`,
       );
-      this._logger.startup(
+      this._logger.startupMsg(
         this._loggerTag,
         `Will listen on interface ${this._networkInterface} (IP: ${this._ip})`,
       );
@@ -252,7 +251,7 @@ export class HttpMan {
         cert: fs.readFileSync(this._certFile),
       };
 
-      this._logger.startup(
+      this._logger.startupMsg(
         this._loggerTag,
         `Attempting to listen on (https://${this._ip}:${this._networkPort})`,
       );
@@ -263,7 +262,7 @@ export class HttpMan {
         )
         .listen(this._networkPort, this._ip);
     } else {
-      this._logger.startup(
+      this._logger.startupMsg(
         this._loggerTag,
         `Attempting to listen on (http://${this._ip}:${this._networkPort})`,
       );
@@ -601,12 +600,12 @@ export class HttpMan {
   // Public methods here
   async stop(): Promise<void> {
     if (this._server !== undefined) {
-      this._logger.shutdown(
+      this._logger.shutdownMsg(
         this._loggerTag,
         "Closing HTTP manager port now ...",
       );
       this._server.close();
-      this._logger.shutdown(this._loggerTag, "Port closed");
+      this._logger.shutdownMsg(this._loggerTag, "Port closed");
     }
 
     return;
@@ -680,7 +679,7 @@ export class HttpMan {
   // Middleware methods here
   static body(options: { maxBodySize?: number } = {}): Middleware {
     let opts = {
-      ...{ maxBodySize: 1024 * 1024 },
+      maxBodySize: 1024 * 1024,
       ...options,
     };
 

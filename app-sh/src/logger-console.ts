@@ -47,7 +47,7 @@ export class LoggerConsole extends Logger {
     }
   }
 
-  startup(tag: string, ...args: any): void {
+  startupMsg(tag: string, ...args: any): void {
     if (this._level >= LogLevel.START_UP) {
       let msg = util.format(
         `${this.timestamp()}STARTUP: ${tag}: ${args[0]}`,
@@ -57,7 +57,7 @@ export class LoggerConsole extends Logger {
     }
   }
 
-  shutdown(tag: string, ...args: any): void {
+  shutdownMsg(tag: string, ...args: any): void {
     if (this._level >= LogLevel.START_UP) {
       let msg = util.format(
         `${this.timestamp()}SHUTDOWN: ${tag}: ${args[0]}`,

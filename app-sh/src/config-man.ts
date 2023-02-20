@@ -144,7 +144,7 @@ export class ConfigMan {
       // We found it, now lets check if we can or should log that we found it
       // NOTE: If we log it we want to indicate is was found on the CLI
       if (this._logger.started && !options.silent) {
-        this._logger.startup(
+        this._logger.startupMsg(
           <string>options.logTag,
           "CLI parameter/flag (%s) = (%j)",
           paramOrFlag,
@@ -180,7 +180,7 @@ export class ConfigMan {
         // We found it, now lets check if we can or should log that we found it
         // NOTE: If we log it we want to indicate is was found in an env var
         if (this._logger.started && !options.silent) {
-          this._logger.startup(
+          this._logger.startupMsg(
             <string>options.logTag,
             "Env var (%s) = (%j)",
             evar,
@@ -209,7 +209,7 @@ export class ConfigMan {
       // We found it, now lets check if we can or should log that we found it
       // NOTE: If we log it we want to indicate is the default value
       if (this._logger.started && !options.silent) {
-        this._logger.startup(
+        this._logger.startupMsg(
           <string>options.logTag,
           "Default value used for (%s) = (%j)",
           options.config,

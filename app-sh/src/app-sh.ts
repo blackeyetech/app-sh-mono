@@ -61,7 +61,7 @@ export type QuestionOptions = {
 export type HttpReqResponse = {
   statusCode: number;
   headers: Headers;
-  body: string | object;
+  body: any;
 };
 
 export type HttpReqOptions = {
@@ -131,16 +131,15 @@ export class AppSh {
   constructor(appShConfig: AppShConfig) {
     // Setup all of the defaults
     let config = {
-      ...{
-        appVersion: "N/A",
-        catchExceptions: false,
-        exitOnUnhandledExceptions: false,
+      appVersion: "N/A",
+      catchExceptions: false,
+      exitOnUnhandledExceptions: false,
 
-        logLevel: LogLevel.INFO,
-        logTimestamp: false,
-        logTimestampLocale: "ISO",
-        logTimestampTz: "UTC",
-      },
+      logLevel: LogLevel.INFO,
+      logTimestamp: false,
+      logTimestampLocale: "ISO",
+      logTimestampTz: "UTC",
+
       ...appShConfig,
     };
 
@@ -362,11 +361,11 @@ export class AppSh {
   }
 
   startup(...args: any): void {
-    this._logger.startup(LOGGER_APP_NAME, ...args);
+    this._logger.startupMsg(LOGGER_APP_NAME, ...args);
   }
 
   shutdown(...args: any): void {
-    this._logger.shutdown(LOGGER_APP_NAME, ...args);
+    this._logger.shutdownMsg(LOGGER_APP_NAME, ...args);
   }
 
   debug(...args: any): void {
@@ -403,10 +402,9 @@ export class AppSh {
     let output = process.stdout;
 
     let options = {
-      ...{
-        muteAnswer: false,
-        muteChar: "*",
-      },
+      muteAnswer: false,
+      muteChar: "*",
+
       ...questionOptions,
     };
     return new Promise((resolve) => {
@@ -453,17 +451,16 @@ export class AppSh {
     reqOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
     let options = {
-      ...{
-        method: "GET",
-        headers: {},
-        timmeout: 0,
-        keepalive: true,
-        cache: <RequestCache>"no-store",
-        mode: <RequestMode>"cors",
-        credentials: <RequestCredentials>"include",
-        redirect: <RequestRedirect>"follow",
-        referrerPolicy: <ReferrerPolicy>"no-referrer",
-      },
+      method: "GET",
+      headers: {},
+      timmeout: 0,
+      keepalive: true,
+      cache: <RequestCache>"no-store",
+      mode: <RequestMode>"cors",
+      credentials: <RequestCredentials>"include",
+      redirect: <RequestRedirect>"follow",
+      referrerPolicy: <ReferrerPolicy>"no-referrer",
+
       ...reqOptions,
     };
 
@@ -629,7 +626,7 @@ export type AppShPluginConfig = {
 export class AppShPlugin {
   // Properties here
   private _name: string;
-  private _appSh: AppSh;
+  protected _appSh: AppSh;
   private _pluginVersion: string;
 
   // Constructor here
@@ -642,13 +639,13 @@ export class AppShPlugin {
       this.stop();
     });
 
-    this.startup("Initialising ...");
+    this.startupMsg("Initialising ...");
   }
 
   // Protected methods (that can be overridden) here
   protected async stop(): Promise<void> {
     // This is a default stop method. Override it if you need to clean up
-    this.shutdown("Stopped!");
+    this.shutdownMsg("Stopped!");
   }
 
   // Getters here
@@ -724,12 +721,12 @@ export class AppShPlugin {
     this._appSh.logger.info(this._name, ...args);
   }
 
-  startup(...args: any): void {
-    this._appSh.logger.startup(this._name, ...args);
+  startupMsg(...args: any): void {
+    this._appSh.logger.startupMsg(this._name, ...args);
   }
 
-  shutdown(...args: any): void {
-    this._appSh.logger.shutdown(this._name, ...args);
+  shutdownMsg(...args: any): void {
+    this._appSh.logger.shutdownMsg(this._name, ...args);
   }
 
   debug(...args: any): void {

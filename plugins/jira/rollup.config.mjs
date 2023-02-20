@@ -48,7 +48,7 @@ export default [
     plugins,
   },
   {
-    input: "dist/plugin.js",
+    input: "./dist/plugin.js",
     output: {
       sourcemap: NODE_ENV === "development",
       file: "dist/plugin.cjs",
