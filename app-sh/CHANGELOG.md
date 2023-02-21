@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.4
+
+### Patch Changes
+
+- Fixed issue where log level is not set
+
 ## 1.3.3
 
 ### Patch Changes

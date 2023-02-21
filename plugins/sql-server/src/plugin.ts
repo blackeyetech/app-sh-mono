@@ -4,11 +4,11 @@ import { AppSh, AppShPlugin } from "app-sh";
 import * as mssql from "mssql";
 
 // export { mssql.MSSQLError }
-interface MsRequestMod extends mssql.Request {
+interface CustomMsRequest extends mssql.Request {
   arrayRowMode?: boolean | undefined;
 }
 
-interface MsIResultMod<T> extends mssql.IResult<T> {
+interface CustomMsIResult<T> extends mssql.IResult<T> {
   columns?: mssql.IColumnMetadata[];
 }
 
@@ -317,13 +317,13 @@ export class SqlServer extends AppShPlugin {
   }
 
   async getTableColumns(collection: string): Promise<mssql.IColumnMetadata> {
-    let request: MsRequestMod = new mssql.Request(this._pool);
+    let request: CustomMsRequest = new mssql.Request(this._pool);
     // This will return the colum details
     request.arrayRowMode = true;
     // We don't want any results so ensure nothing comes back (1=0)
     let query = `SELECT * FROM ${collection} WHERE 1 = 0;`;
 
-    let res: MsIResultMod<any> = await request.query(query);
+    let res: CustomMsIResult<any> = await request.query(query);
 
     // This is an object of positional columns with each column being
     // denoted by the position (ie. this is an array). Convert this
@@ -402,7 +402,7 @@ export class SqlServer extends AppShPlugin {
     if (params.opts.orderByDesc === undefined) params.opts.orderByDesc = [];
 
     let query = "";
-    let request: MsRequestMod;
+    let request: CustomMsRequest;
 
     if (params.transaction !== undefined) {
       request = new mssql.Request(params.transaction);
@@ -460,7 +460,7 @@ export class SqlServer extends AppShPlugin {
       }
     }
 
-    let res: MsIResultMod<any> = await request.query(query);
+    let res: CustomMsIResult<any> = await request.query(query);
 
     if (params.opts.format === "array") {
       if (res.columns !== undefined) {

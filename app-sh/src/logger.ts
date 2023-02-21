@@ -74,8 +74,6 @@ export abstract class Logger {
 
     // Check if LogLevel was set and if it wasn't use default
     if (logLevel.length) {
-      this._level = this._level;
-    } else {
       switch (logLevel.toUpperCase()) {
         case "SILENT":
           this._level = LogLevel.COMPLETE_SILENCE;

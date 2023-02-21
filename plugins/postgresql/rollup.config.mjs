@@ -43,7 +43,7 @@ export default [
       file: "dist/plugin.mjs",
       format: "es",
     },
-    external: ["app-sh"],
+    external: ["app-sh", "pg-native"],
 
     plugins,
   },
@@ -54,7 +54,7 @@ export default [
       file: "dist/plugin.cjs",
       format: "cjs",
     },
-    external: ["app-sh"],
+    external: ["app-sh", "pg-native"],
 
     plugins,
   },

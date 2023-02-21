@@ -18,7 +18,7 @@ import { z } from "zod";
 class App extends AppSh {
   constructor() {
     super({
-      logLevel: LogLevel.TRACE,
+      // logLevel: LogLevel.TRACE,
       logTimestampLocale: "en-us",
       logTimestampTz: "EET",
       logTimestamp: false,

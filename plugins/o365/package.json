@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "1.0.0",
   "name": "@app-sh/o365",
   "description": "App Shell plugin for Office 365",
   "exports": {

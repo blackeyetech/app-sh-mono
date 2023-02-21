@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "1.0.0",
   "name": "@app-sh/sql-server",
   "description": "App Shell plugin for SQL Server",
   "exports": {
