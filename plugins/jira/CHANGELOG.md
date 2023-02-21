@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.0.4
+
+### Patch Changes
+
+- question() is now a static method for all plugins
+
 ## 1.0.3
 
 ### Patch Changes
