@@ -661,6 +661,14 @@ export class AppShPlugin {
 
   // Private methods here
 
+  // Static metods here
+  static async question(
+    ask: string,
+    questionOptions?: QuestionOptions,
+  ): Promise<string> {
+    return AppSh.question(ask, questionOptions);
+  }
+
   // Public methods here
   getConfigStr(
     config: string,
@@ -749,13 +757,6 @@ export class AppShPlugin {
     reqOptions?: HttpReqOptions,
   ): Promise<HttpReqResponse> {
     return this._appSh.httpReq(origin, path, reqOptions);
-  }
-
-  async question(
-    ask: string,
-    questionOptions?: QuestionOptions,
-  ): Promise<string> {
-    return AppSh.question(ask, questionOptions);
   }
 
   addHttpMan(

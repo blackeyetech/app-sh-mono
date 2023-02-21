@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.8
+
+### Patch Changes
+
+- Made question() static on AppShPlugin
+
 ## 1.3.7
 
 ### Patch Changes
