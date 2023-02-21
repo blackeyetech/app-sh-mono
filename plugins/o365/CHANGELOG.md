@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.0.3
+
+### Patch Changes
+
+- Made question() static
+
 ## 1.0.2
 
 ### Patch Changes

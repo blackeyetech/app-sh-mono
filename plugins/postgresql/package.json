@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "@app-sh/postgresql",
   "description": "App Shell pulgin for PostgreSQL",
   "exports": {
