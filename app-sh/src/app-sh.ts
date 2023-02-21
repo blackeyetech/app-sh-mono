@@ -227,6 +227,59 @@ export class AppSh {
 
   // Private methods here
 
+  // Static methods here
+
+  static async question(
+    ask: string,
+    questionOptions?: QuestionOptions,
+  ): Promise<string> {
+    let input = process.stdin;
+    let output = process.stdout;
+
+    let options = {
+      muteAnswer: false,
+      muteChar: "*",
+
+      ...questionOptions,
+    };
+    return new Promise((resolve) => {
+      let rl = readline.createInterface({
+        input,
+        output,
+      });
+
+      if (options.muteAnswer) {
+        input.on("keypress", () => {
+          // get the number of characters entered so far:
+          var len = rl.line.length;
+
+          if (options.muteChar.length === 0) {
+            // move cursor back one since we will always be at the start
+            readline.moveCursor(output, -1, 0);
+            // clear everything to the right of the cursor
+            readline.clearLine(output, 1);
+          } else {
+            // move cursor back to the beginning of the input
+            readline.moveCursor(output, -len, 0);
+            // clear everything to the right of the cursor
+            readline.clearLine(output, 1);
+
+            // If there is a muteChar then replace the original input with it
+            for (var i = 0; i < len; i++) {
+              // In case the user passes a string just use the 1st char
+              output.write(options.muteChar[0]);
+            }
+          }
+        });
+      }
+
+      rl.question(ask, (answer) => {
+        resolve(answer);
+        rl.close();
+      });
+    });
+  }
+
   // Public methods here
   finally(handler: () => Promise<void>) {
     this._finally = handler;
@@ -391,57 +444,6 @@ export class AppSh {
 
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
-    });
-  }
-
-  async question(
-    ask: string,
-    questionOptions?: QuestionOptions,
-  ): Promise<string> {
-    let input = process.stdin;
-    let output = process.stdout;
-
-    let options = {
-      muteAnswer: false,
-      muteChar: "*",
-
-      ...questionOptions,
-    };
-    return new Promise((resolve) => {
-      let rl = readline.createInterface({
-        input,
-        output,
-      });
-
-      if (options.muteAnswer) {
-        input.on("keypress", () => {
-          // get the number of characters entered so far:
-          var len = rl.line.length;
-
-          if (options.muteChar.length === 0) {
-            // move cursor back one since we will always be at the start
-            readline.moveCursor(output, -1, 0);
-            // clear everything to the right of the cursor
-            readline.clearLine(output, 1);
-          } else {
-            // move cursor back to the beginning of the input
-            readline.moveCursor(output, -len, 0);
-            // clear everything to the right of the cursor
-            readline.clearLine(output, 1);
-
-            // If there is a muteChar then replace the original input with it
-            for (var i = 0; i < len; i++) {
-              // In case the user passes a string just use the 1st char
-              output.write(options.muteChar[0]);
-            }
-          }
-        });
-      }
-
-      rl.question(ask, (answer) => {
-        resolve(answer);
-        rl.close();
-      });
     });
   }
 
@@ -753,7 +755,7 @@ export class AppShPlugin {
     ask: string,
     questionOptions?: QuestionOptions,
   ): Promise<string> {
-    return this._appSh.question(ask, questionOptions);
+    return AppSh.question(ask, questionOptions);
   }
 
   addHttpMan(

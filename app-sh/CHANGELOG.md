@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.7
+
+### Patch Changes
+
+- Made question() and static method
+
 ## 1.3.6
 
 ### Patch Changes
