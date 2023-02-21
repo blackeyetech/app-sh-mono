@@ -7,6 +7,8 @@ import querystring from "node:querystring";
 
 // Types here
 export type O365Config = {
+  appSh?: AppSh;
+
   appId: string;
   clientSecret: string;
   tenantId: string;
@@ -46,10 +48,10 @@ export class o365 extends AppShPlugin {
   private _tokenTimeout: NodeJS.Timeout | undefined;
   private _token: string | null;
 
-  constructor(appSh: AppSh, o365Config: O365Config) {
+  constructor(o365Config: O365Config) {
     super({
       name: "o365",
-      appSh,
+      appSh: o365Config.appSh,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

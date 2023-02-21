@@ -128,7 +128,7 @@ export class AppSh {
   private _finally?: () => Promise<void>;
 
   // Constructor here
-  constructor(appShConfig: AppShConfig) {
+  constructor(appShConfig: AppShConfig = {}) {
     // Setup all of the defaults
     let config = {
       appVersion: "N/A",
@@ -618,8 +618,8 @@ export class AppSh {
 // Types here
 export type AppShPluginConfig = {
   name: string;
-  appSh: AppSh;
   pluginVersion: string;
+  appSh?: AppSh;
 };
 
 // AppShPlugin class here
@@ -632,8 +632,8 @@ export class AppShPlugin {
   // Constructor here
   constructor(config: AppShPluginConfig) {
     this._name = config.name;
-    this._appSh = config.appSh;
     this._pluginVersion = config.pluginVersion;
+    this._appSh = config.appSh === undefined ? new AppSh() : config.appSh;
 
     this._appSh.addPlugin(this, async () => {
       this.stop();

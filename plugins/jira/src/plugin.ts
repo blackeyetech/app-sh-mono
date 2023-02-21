@@ -8,6 +8,8 @@ export type AuthDetails = {
 };
 
 export type JiraConfig = {
+  appSh?: AppSh;
+
   server: string;
   user: string;
   password: string;
@@ -73,10 +75,10 @@ export class Jira extends AppShPlugin {
   private _sessionHeader: Record<string, string>; // Used if logged in
   private _basicAuthHeader: Record<string, string>; // Used if not logged in
 
-  constructor(appSh: AppSh, jiraConfig: JiraConfig) {
+  constructor(jiraConfig: JiraConfig) {
     super({
       name: "Jira",
-      appSh,
+      appSh: jiraConfig.appSh,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

@@ -14,6 +14,8 @@ interface CustomMsIResult<T> extends mssql.IResult<T> {
 
 // Types here
 export type SqlServerConfig = {
+  appSh?: AppSh;
+
   database: string;
   user: string;
   password: string;
@@ -103,10 +105,10 @@ export class SqlServer extends AppShPlugin {
   private _port: number;
   private _appName: string;
 
-  constructor(appSh: AppSh, sqlServerConfig: SqlServerConfig) {
+  constructor(sqlServerConfig: SqlServerConfig) {
     super({
       name: "SqlServer",
-      appSh,
+      appSh: sqlServerConfig.appSh,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

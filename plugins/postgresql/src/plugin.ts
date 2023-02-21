@@ -5,6 +5,8 @@ import * as pg from "pg";
 
 // Types here
 export type PostgreSqlConfig = {
+  appSh?: AppSh;
+
   database: string;
   user: string;
   password: string;
@@ -47,10 +49,10 @@ export class PostgreSql extends AppShPlugin {
   // Properties here
   private _pool: pg.Pool;
 
-  constructor(appSh: AppSh, postgresqlConfig: PostgreSqlConfig) {
+  constructor(postgresqlConfig: PostgreSqlConfig) {
     super({
       name: "PostgreSQL",
-      appSh,
+      appSh: postgresqlConfig.appSh,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",
