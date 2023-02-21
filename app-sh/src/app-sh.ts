@@ -748,4 +748,19 @@ export class AppShPlugin {
   ): Promise<HttpReqResponse> {
     return this._appSh.httpReq(origin, path, reqOptions);
   }
+
+  async question(
+    ask: string,
+    questionOptions?: QuestionOptions,
+  ): Promise<string> {
+    return this._appSh.question(ask, questionOptions);
+  }
+
+  addHttpMan(
+    networkInterface: string,
+    networkPort: number,
+    httpConfig: HttpConfig = {},
+  ): HttpMan {
+    return this._appSh.addHttpMan(networkInterface, networkPort, httpConfig);
+  }
 }

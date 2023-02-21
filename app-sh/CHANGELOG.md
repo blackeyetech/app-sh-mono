@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.6
+
+### Patch Changes
+
+- Added question and addHttpMan to AppShPlugin
+
 ## 1.3.5
 
 ### Patch Changes
