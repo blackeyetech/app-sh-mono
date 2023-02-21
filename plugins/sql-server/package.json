@@ -1,0 +1,51 @@
+{
+  "version": "0.0.0",
+  "name": "@app-sh/sql-server",
+  "description": "App Shell plugin for SQL Server",
+  "exports": {
+    "node": {
+      "require": "./dist/plugin.cjs",
+      "import": "./dist/plugin.mjs"
+    }
+  },
+  "files": [
+    "dist/plugin.mjs",
+    "dist/plugin.cjs",
+    "dist/types/*"
+  ],
+  "types": "./dist/types/plugin.d.ts",
+  "scripts": {
+    "rollup": "rollup -c rollup.config.mjs",
+    "build-dev": "tsc --sourceMap && npm run rollup",
+    "build-prod": "npm run clean && tsc && npm run rollup",
+    "format-ts": "prettier --write 'src/**/*.ts'",
+    "format-js": "prettier --write 'dist/**/*.{js,ts}'",
+    "format-misc": "prettier --write '**/*.{json,md,yaml}'",
+    "install-bin": "npm install -g $(npm pack . | tail -1)",
+    "test": "echo \"No tests\" && exit 0",
+    "clean": "rm -rf ./dist",
+    "prepare": "npm run clean && npm run build-prod",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "Application",
+    "Shell",
+    "Plugin",
+    "SQL Server"
+  ],
+  "author": "Black Eye Technology",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "app-sh": "workspace:^1.3.3",
+    "mssql": "^9.1.1"
+  },
+  "devDependencies": {
+    "@types/mssql": "^8.1.2"
+  }
+}

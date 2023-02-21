@@ -3,4 +3,5 @@ packages:
   - plugins/o365
   - plugins/postgresql
   - plugins/jira
+  - plugins/sql-server
   - testing
