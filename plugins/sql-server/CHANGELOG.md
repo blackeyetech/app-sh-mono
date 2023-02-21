@@ -1,5 +1,11 @@
 # @app-sh/sql-server
 
+## 1.0.2
+
+### Patch Changes
+
+- question() and addHttpMan() added
+
 ## 1.0.1
 
 ### Patch Changes
