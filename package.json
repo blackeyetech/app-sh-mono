@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "App Shell Monorepo",
   "scripts": {
-    "prep-husky": "pnpm exec husky install"
+    "prepare": "husky install"
   },
   "engines": {
     "node": ">=18.0.0"
