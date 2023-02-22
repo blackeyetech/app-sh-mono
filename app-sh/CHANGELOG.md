@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.9
+
+### Patch Changes
+
+- Updated min node engine requirement to 18
+
 ## 1.3.8
 
 ### Patch Changes
