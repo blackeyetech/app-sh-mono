@@ -35,8 +35,8 @@ type MessageAttachment = {
 // Misc consts here
 const EMAIL_REF_GUID = `String {a75e89ac-9033-49c0-a4fc-52d83c8468ac} Name app-sh-o365-ref-code`;
 
-// o365 class here
-export class o365 extends AppShPlugin {
+// O365 class here
+export class O365 extends AppShPlugin {
   // Properties here
   private _appId: string;
   private _clientSecret: string;
