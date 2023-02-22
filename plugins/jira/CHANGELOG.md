@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated min node engine requirement to 18
+
 ## 1.0.4
 
 ### Patch Changes
