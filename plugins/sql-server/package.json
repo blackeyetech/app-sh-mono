@@ -1,12 +1,10 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "name": "@app-sh/sql-server",
   "description": "App Shell plugin for SQL Server",
   "exports": {
-    "node": {
-      "require": "./dist/plugin.cjs",
-      "import": "./dist/plugin.mjs"
-    }
+    "require": "./dist/plugin.cjs",
+    "import": "./dist/plugin.mjs"
   },
   "files": [
     "dist/plugin.mjs",

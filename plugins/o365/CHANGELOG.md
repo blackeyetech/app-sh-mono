@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.0.10
+
+### Patch Changes
+
+- Changes exports in package.json
+
 ## 1.0.9
 
 ### Patch Changes

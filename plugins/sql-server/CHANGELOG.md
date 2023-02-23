@@ -1,5 +1,11 @@
 # @app-sh/sql-server
 
+## 1.0.8
+
+### Patch Changes
+
+- Changes exports in package.json
+
 ## 1.0.7
 
 ### Patch Changes

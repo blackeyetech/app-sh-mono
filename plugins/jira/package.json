@@ -1,12 +1,10 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "name": "@app-sh/jira",
   "description": "App Shell plugin for JIRA",
   "exports": {
-    "node": {
-      "require": "./dist/plugin.cjs",
-      "import": "./dist/plugin.mjs"
-    }
+    "require": "./dist/plugin.cjs",
+    "import": "./dist/plugin.mjs"
   },
   "files": [
     "dist/plugin.mjs",
