@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.0.9
+
+### Patch Changes
+
+- Removed header causing issues
+
 ## 1.0.8
 
 ### Patch Changes

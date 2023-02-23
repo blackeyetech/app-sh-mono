@@ -20,8 +20,8 @@ class App extends AppSh {
     super({
       // logLevel: LogLevel.TRACE,
       logTimestampLocale: "en-us",
-      logTimestampTz: "EET",
-      logTimestamp: false,
+      logTimestampTz: "UTC",
+      logTimestamp: true,
       catchExceptions: true,
       exitOnUnhandledExceptions: false,
     });

@@ -237,9 +237,6 @@ export class O365 extends AppShPlugin {
       `/v1.0/users/${fromUser}/sendMail`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: { message },
         bearerToken: this._token,
       },

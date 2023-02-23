@@ -6,7 +6,7 @@ import terser from "@rollup/plugin-terser";
 import sourcemaps from "rollup-plugin-sourcemaps";
 import dts from "rollup-plugin-dts";
 
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 // Consts here
 
