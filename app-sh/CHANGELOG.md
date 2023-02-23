@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.11
+
+### Patch Changes
+
+- Fixed exports in package.json
+
 ## 1.3.10
 
 ### Patch Changes

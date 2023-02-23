@@ -1,12 +1,10 @@
 {
-  "version": "1.3.10",
+  "version": "1.3.11",
   "name": "app-sh",
   "description": "App Shell",
   "exports": {
-    "node": {
-      "require": "./dist/app-sh.cjs",
-      "import": "./dist/app-sh.mjs"
-    }
+    "require": "./dist/app-sh.cjs",
+    "import": "./dist/app-sh.mjs"
   },
   "files": [
     "dist/app-sh.mjs",
