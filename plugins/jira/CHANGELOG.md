@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.0.7
+
+### Patch Changes
+
+- Updated types field in package.json
+
 ## 1.0.6
 
 ### Patch Changes

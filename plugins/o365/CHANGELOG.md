@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.0.8
+
+### Patch Changes
+
+- Updated types field in package.json
+
 ## 1.0.7
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "name": "@app-sh/jira",
   "description": "App Shell plugin for JIRA",
   "exports": {
@@ -13,7 +13,7 @@
     "dist/plugin.cjs",
     "dist/plugin.d.ts"
   ],
-  "types": "./dist/types/plugin.d.ts",
+  "types": "./dist/plugin.d.ts",
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",

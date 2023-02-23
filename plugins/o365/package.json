@@ -1,5 +1,5 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "name": "@app-sh/o365",
   "description": "App Shell plugin for Office 365",
   "exports": {
@@ -13,7 +13,7 @@
     "dist/plugin.cjs",
     "dist/plugin.d.ts"
   ],
-  "types": "./dist/types/plugin.d.ts",
+  "types": "./dist/plugin.d.ts",
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",

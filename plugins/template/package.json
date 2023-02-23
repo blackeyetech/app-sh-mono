@@ -13,7 +13,7 @@
     "dist/plugin.cjs",
     "dist/plugin.d.ts"
   ],
-  "types": "./dist/types/plugin.d.ts",
+  "types": "./dist/plugin.d.ts",
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",
