@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.0.7
+
+### Patch Changes
+
+- Now rolling up type definitions
+
 ## 1.0.6
 
 ### Patch Changes

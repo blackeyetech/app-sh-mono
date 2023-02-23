@@ -11,7 +11,7 @@
   "files": [
     "dist/plugin.mjs",
     "dist/plugin.cjs",
-    "dist/types/*"
+    "dist/plugin.d.ts"
   ],
   "types": "./dist/types/plugin.d.ts",
   "scripts": {

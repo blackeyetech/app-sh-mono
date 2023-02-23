@@ -1,5 +1,5 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "name": "@app-sh/o365",
   "description": "App Shell plugin for Office 365",
   "exports": {
@@ -11,7 +11,7 @@
   "files": [
     "dist/plugin.mjs",
     "dist/plugin.cjs",
-    "dist/types/*"
+    "dist/plugin.d.ts"
   ],
   "types": "./dist/types/plugin.d.ts",
   "scripts": {

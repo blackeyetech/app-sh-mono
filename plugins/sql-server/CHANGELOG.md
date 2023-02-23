@@ -1,5 +1,11 @@
 # @app-sh/sql-server
 
+## 1.0.6
+
+### Patch Changes
+
+- Now rolling up type definitions
+
 ## 1.0.5
 
 ### Patch Changes

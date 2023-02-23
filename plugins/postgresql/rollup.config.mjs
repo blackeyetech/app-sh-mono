@@ -4,6 +4,7 @@ import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
 import sourcemaps from "rollup-plugin-sourcemaps";
+import dts from "rollup-plugin-dts";
 
 import { readFileSync } from "fs";
 
@@ -57,5 +58,14 @@ export default [
     external: ["app-sh", "pg-native"],
 
     plugins,
+  },
+  {
+    input: "dist/types/plugin.d.ts",
+    output: {
+      file: "dist/plugin.d.ts",
+      format: "es",
+    },
+    external: [],
+    plugins: [dts()],
   },
 ];

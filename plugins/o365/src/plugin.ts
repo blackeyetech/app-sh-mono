@@ -155,7 +155,7 @@ export class O365 extends AppShPlugin {
     fromUser: string,
     subject: string,
     content: string,
-    contentType: MSGraph.BodyType,
+    contentType: "text" | "html",
     refCode?: string,
     attachments?: MessageAttachment[],
   ): Promise<boolean> {
