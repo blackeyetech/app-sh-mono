@@ -17,6 +17,7 @@ importers:
       lint-staged: ^13.1.2
       prettier: ^2.8.4
       rollup: ^3.17.2
+      rollup-plugin-dts: ^5.2.0
       rollup-plugin-sourcemaps: ^0.6.3
       ts-node: ^10.9.1
       typescript: ^4.9.5
@@ -27,6 +28,7 @@ importers:
       "@rollup/plugin-replace": 5.0.2_rollup@3.17.2
       "@rollup/plugin-terser": 0.2.1_rollup@3.17.2
       rollup: 3.17.2
+      rollup-plugin-dts: 5.2.0_vi3xdhr63abcxdtwtptol35g5u
       rollup-plugin-sourcemaps: 0.6.3_3bxvautnrmbpwuljdrxpykdbla
     devDependencies:
       "@changesets/cli": 2.26.0
@@ -313,7 +315,6 @@ packages:
     engines: { node: ">=6.9.0" }
     dependencies:
       "@babel/highlight": 7.18.6
-    dev: true
 
   /@babel/helper-validator-identifier/7.19.1:
     resolution:
@@ -321,7 +322,6 @@ packages:
         integrity: sha512-awrNfaMtnHUr653GgGEs++LlAvW6w+DcPrOliSMXWCKo597CwL5Acf/wWdNkf/tfEQE3mjkeD1YOVZOUV/od1w==,
       }
     engines: { node: ">=6.9.0" }
-    dev: true
 
   /@babel/highlight/7.18.6:
     resolution:
@@ -333,7 +333,6 @@ packages:
       "@babel/helper-validator-identifier": 7.19.1
       chalk: 2.4.2
       js-tokens: 4.0.0
-    dev: true
 
   /@babel/runtime/7.21.0:
     resolution:
@@ -1046,7 +1045,6 @@ packages:
     engines: { node: ">=4" }
     dependencies:
       color-convert: 1.9.3
-    dev: true
 
   /ansi-styles/4.3.0:
     resolution:
@@ -1284,7 +1282,6 @@ packages:
       ansi-styles: 3.2.1
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
-    dev: true
 
   /chalk/4.1.2:
     resolution:
@@ -1390,7 +1387,6 @@ packages:
       }
     dependencies:
       color-name: 1.1.3
-    dev: true
 
   /color-convert/2.0.1:
     resolution:
@@ -1407,7 +1403,6 @@ packages:
       {
         integrity: sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw==,
       }
-    dev: true
 
   /color-name/1.1.4:
     resolution:
@@ -1787,7 +1782,6 @@ packages:
         integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==,
       }
     engines: { node: ">=0.8.0" }
-    dev: true
 
   /esprima/4.0.1:
     resolution:
@@ -2127,7 +2121,6 @@ packages:
         integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==,
       }
     engines: { node: ">=4" }
-    dev: true
 
   /has-flag/4.0.0:
     resolution:
@@ -2588,7 +2581,6 @@ packages:
       {
         integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==,
       }
-    dev: true
 
   /js-yaml/3.14.1:
     resolution:
@@ -2842,6 +2834,16 @@ packages:
     resolution:
       {
         integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==,
+      }
+    engines: { node: ">=12" }
+    dependencies:
+      "@jridgewell/sourcemap-codec": 1.4.14
+    dev: false
+
+  /magic-string/0.29.0:
+    resolution:
+      {
+        integrity: sha512-WcfidHrDjMY+eLjlU+8OvwREqHwpgCeKVBUpQ3OhYYuvfaYCUgcbuBzappNzZvg/v8onU3oQj+BYpkOJe9Iw4Q==,
       }
     engines: { node: ">=12" }
     dependencies:
@@ -3623,6 +3625,23 @@ packages:
         integrity: sha512-V2hovdzFbOi77/WajaSMXk2OLm+xNIeQdMMuB7icj7bk6zi2F8GGAxigcnDFpJHbNyNcgyJDiP+8nOrY5cZGrA==,
       }
 
+  /rollup-plugin-dts/5.2.0_vi3xdhr63abcxdtwtptol35g5u:
+    resolution:
+      {
+        integrity: sha512-B68T/haEu2MKcz4kNUhXB8/h5sq4gpplHAJIYNHbh8cp4ZkvzDvNca/11KQdFrB9ZeKucegQIotzo5T0JUtM8w==,
+      }
+    engines: { node: ">=v14" }
+    peerDependencies:
+      rollup: ^3.0.0
+      typescript: ^4.1
+    dependencies:
+      magic-string: 0.29.0
+      rollup: 3.17.2
+      typescript: 4.9.5
+    optionalDependencies:
+      "@babel/code-frame": 7.18.6
+    dev: false
+
   /rollup-plugin-sourcemaps/0.6.3_3bxvautnrmbpwuljdrxpykdbla:
     resolution:
       {
@@ -4075,7 +4094,6 @@ packages:
     engines: { node: ">=4" }
     dependencies:
       has-flag: 3.0.0
-    dev: true
 
   /supports-color/7.2.0:
     resolution:
@@ -4287,7 +4305,6 @@ packages:
       }
     engines: { node: ">=4.2.0" }
     hasBin: true
-    dev: true
 
   /unbox-primitive/1.0.2:
     resolution:

@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.10
+
+### Patch Changes
+
+- Rolling up types now
+
 ## 1.3.9
 
 ### Patch Changes
