@@ -11,6 +11,7 @@ import {
   HttpConfig,
   HttpError,
   HttpConfigError,
+  HttpServerResponse,
 } from "./http-man";
 
 import * as readline from "node:readline";
@@ -26,6 +27,7 @@ export {
   HttpConfig,
   HttpError,
   HttpConfigError,
+  HttpServerResponse,
 };
 
 // Misc consts here

@@ -159,7 +159,7 @@ export class PostgreSql extends AppShPlugin {
     collection: string,
     fields: Record<string, any>,
     options?: PostgreSqlCreateOptions,
-  ) {
+  ): Promise<any[]> {
     let fieldsStr = "";
     let valuesStr = "";
     let values = [];
@@ -199,7 +199,10 @@ export class PostgreSql extends AppShPlugin {
     return res.rows;
   }
 
-  async read(collection: string, readOptions: PostgreSqlReadOptions = {}) {
+  async read(
+    collection: string,
+    readOptions: PostgreSqlReadOptions = {},
+  ): Promise<any[]> {
     let opts = {
       fields: ["*"],
 
@@ -302,7 +305,7 @@ export class PostgreSql extends AppShPlugin {
     collection: string,
     fields: Record<string, any>,
     updateOptions: PostgreSqlUpdateOptions = {},
-  ) {
+  ): Promise<number> {
     let opts = {
       criteria: {},
 
@@ -359,7 +362,7 @@ export class PostgreSql extends AppShPlugin {
   async delete(
     collection: string,
     deleteOptions: PostgreSqlDeleteOptions = {},
-  ) {
+  ): Promise<number> {
     let opts = {
       criteria: {},
 
@@ -400,7 +403,7 @@ export class PostgreSql extends AppShPlugin {
     return res.rowCount;
   }
 
-  async query(query: string, client?: pg.PoolClient) {
+  async query(query: string, client?: pg.PoolClient): Promise<any[]> {
     let pgClient = client === undefined ? this._pool : client;
 
     let res = await pgClient.query(query).catch((e) => {
@@ -412,7 +415,7 @@ export class PostgreSql extends AppShPlugin {
     return res.rows;
   }
 
-  async exec(query: string, client?: pg.PoolClient) {
+  async exec(query: string, client?: pg.PoolClient): Promise<number> {
     this.debug("query() query: %j", query);
 
     let pgClient = client === undefined ? this._pool : client;
