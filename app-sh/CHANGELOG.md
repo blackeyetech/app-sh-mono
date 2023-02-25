@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.12
+
+### Patch Changes
+
+- Updated a couple types to use Record<string, any>
+
 ## 1.3.11
 
 ### Patch Changes

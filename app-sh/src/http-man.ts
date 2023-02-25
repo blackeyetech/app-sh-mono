@@ -41,8 +41,8 @@ export type EndpointOptions = {
 
 export type EndpointCallbackDetails = {
   url: URL;
-  params: { [key: string]: unknown };
-  middlewareProps: { [key: string]: unknown };
+  params: Record<string, any>;
+  middlewareProps: Record<string, any>;
   sseServer?: SseServer;
 };
 
@@ -441,7 +441,7 @@ export class HttpMan {
       // If we are here we found a callback - process it and stop looking
       let details: EndpointCallbackDetails = {
         url,
-        params: <{ [key: string]: unknown }>result.params,
+        params: <Record<string, any>>result.params,
         middlewareProps: {},
       };
 
