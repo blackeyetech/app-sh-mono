@@ -190,3 +190,12 @@ httpMan1.endpoint("GET", "/", (req, res, details) => {
 httpMan2.endpoint("GET", "/", (req, res, details) => {
   res.text = "<html><p>Hello from 2</p></html>";
 });
+
+httpMan1.endpoint("GET", "/login", (req, res, details) => {
+  res.json = "login";
+});
+
+httpMan1.endpoint("POST", "/login/attempt", (req, res, details) => {
+  res.writeHead(302, { Location: "http://localhost:8081/?user=kieran" });
+  res.end();
+});

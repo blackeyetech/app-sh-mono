@@ -307,6 +307,9 @@ export class AppSh {
       await httpMan.stop();
     }
 
+    // Clear the HttpMan list
+    this._httpManList = [];
+
     // Stop the application second
     this.shutdown("Attempting to stop the application ...");
     await this.stop().catch((e) => {
@@ -329,6 +332,9 @@ export class AppSh {
         this.error(e);
       });
     }
+
+    // Clear the plugins list
+    this._plugins = [];
 
     this.shutdown("So long and thanks for all the fish!");
 

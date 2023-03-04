@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.14
+
+### Patch Changes
+
+- Clearing HttpMan and plugin lists on exit - this is in case you need to do a soft exit
+
 ## 1.3.13
 
 ### Patch Changes
