@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.16
+
+### Patch Changes
+
+- Added getters to HttpMan to expose baseUrl and if HTTPS is enabled
+
 ## 1.3.15
 
 ### Patch Changes

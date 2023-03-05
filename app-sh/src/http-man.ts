@@ -114,6 +114,7 @@ export class HttpMan {
   private _networkInterface: string;
   private _networkPort: number;
   private _networkIp: string;
+  private _baseUrl: string;
 
   private _loggerTag: string;
   private _logger: Logger;
@@ -159,6 +160,7 @@ export class HttpMan {
     };
 
     this._networkIp = "";
+    this._baseUrl = ";";
 
     this._logger = appSh.logger;
     this._loggerTag = config.loggerTag;
@@ -204,6 +206,14 @@ export class HttpMan {
     return this._networkPort;
   }
 
+  get baseUrl(): string {
+    return this._baseUrl;
+  }
+
+  get httpsEnabled(): boolean {
+    return this._enableHttps;
+  }
+
   // Private methods here
   private setupHttpServer(): void {
     this._logger.startupMsg(
@@ -246,6 +256,8 @@ export class HttpMan {
 
     // Create either a HTTP or HTTPS server
     if (this._enableHttps) {
+      this._baseUrl = `https://${this._networkIp}:${this._networkPort}`;
+
       if (this._keyFile === undefined) {
         throw new HttpConfigError(
           "HTTPS is enabled but no key file pprovided!",
@@ -264,7 +276,7 @@ export class HttpMan {
 
       this._logger.startupMsg(
         this._loggerTag,
-        `Attempting to listen on (https://${this._networkIp}:${this._networkPort})`,
+        `Attempting to listen on (${this._baseUrl})`,
       );
 
       this._server = https
@@ -273,9 +285,11 @@ export class HttpMan {
         )
         .listen(this._networkPort, this._networkIp);
     } else {
+      this._baseUrl = `http://${this._networkIp}:${this._networkPort}`;
+
       this._logger.startupMsg(
         this._loggerTag,
-        `Attempting to listen on (http://${this._networkIp}:${this._networkPort})`,
+        `Attempting to listen on (${this._baseUrl})`,
       );
 
       this._server = http
