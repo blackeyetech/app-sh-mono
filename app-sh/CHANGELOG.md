@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.3.15
+
+### Patch Changes
+
+- Added getters to HttpMan to expose port and IP it is listening on
+
 ## 1.3.14
 
 ### Patch Changes

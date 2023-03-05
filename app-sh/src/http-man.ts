@@ -113,6 +113,7 @@ export type HttpConfig = {
 export class HttpMan {
   private _networkInterface: string;
   private _networkPort: number;
+  private _networkIp: string;
 
   private _loggerTag: string;
   private _logger: Logger;
@@ -133,7 +134,6 @@ export class HttpMan {
   private _defaultMiddlewareList: Middleware[];
 
   private _server?: http.Server;
-  private _ip?: string;
 
   constructor(
     appSh: AppSh,
@@ -157,6 +157,8 @@ export class HttpMan {
 
       ...httpConfig,
     };
+
+    this._networkIp = "";
 
     this._logger = appSh.logger;
     this._loggerTag = config.loggerTag;
@@ -193,6 +195,15 @@ export class HttpMan {
     );
   }
 
+  // Getter methods here
+  get networkIp(): string {
+    return this._networkIp;
+  }
+
+  get networkPort(): number {
+    return this._networkPort;
+  }
+
   // Private methods here
   private setupHttpServer(): void {
     this._logger.startupMsg(
@@ -209,25 +220,25 @@ export class HttpMan {
       );
     }
 
-    this._ip = "";
+    this._networkIp = "";
 
     // Search for the first I/F with a family of type IPv4
     let found = ifaces[this._networkInterface]?.find(
       (i) => i.family === "IPv4",
     );
     if (found !== undefined) {
-      this._ip = found.address;
+      this._networkIp = found.address;
       this._logger.startupMsg(
         this._loggerTag,
-        `Found IP (${this._ip}) for interface ${this._networkInterface}`,
+        `Found IP (${this._networkIp}) for interface ${this._networkInterface}`,
       );
       this._logger.startupMsg(
         this._loggerTag,
-        `Will listen on interface ${this._networkInterface} (IP: ${this._ip})`,
+        `Will listen on interface ${this._networkInterface} (IP: ${this._networkIp})`,
       );
     }
 
-    if (this._ip.length === 0) {
+    if (this._networkIp.length === 0) {
       throw new Error(
         `${this._networkInterface} is not an interface on this server`,
       );
@@ -253,23 +264,23 @@ export class HttpMan {
 
       this._logger.startupMsg(
         this._loggerTag,
-        `Attempting to listen on (https://${this._ip}:${this._networkPort})`,
+        `Attempting to listen on (https://${this._networkIp}:${this._networkPort})`,
       );
 
       this._server = https
         .createServer(options, (req, res) =>
           this.handleHttpReq(req, res, "https"),
         )
-        .listen(this._networkPort, this._ip);
+        .listen(this._networkPort, this._networkIp);
     } else {
       this._logger.startupMsg(
         this._loggerTag,
-        `Attempting to listen on (http://${this._ip}:${this._networkPort})`,
+        `Attempting to listen on (http://${this._networkIp}:${this._networkPort})`,
       );
 
       this._server = http
         .createServer((req, res) => this.handleHttpReq(req, res, "http"))
-        .listen(this._networkPort, this._ip);
+        .listen(this._networkPort, this._networkIp);
     }
 
     this._server.keepAliveTimeout = this._httpKeepAliveTimeout;
