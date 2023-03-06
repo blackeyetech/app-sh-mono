@@ -18,12 +18,14 @@ export class LoggerConsole extends Logger {
   }
 
   error(tag: string, ...args: any): void {
-    // errors are always logged
-    let msg = util.format(
-      `${this.timestamp()}ERROR: ${tag}: ${args[0]}`,
-      ...args.slice(1),
-    );
-    console.error(msg);
+    // errors are always logged unless level = LOG_COMPLETE_SILENCE
+    if (this._level > LogLevel.COMPLETE_SILENCE) {
+      let msg = util.format(
+        `${this.timestamp()}ERROR: ${tag}: ${args[0]}`,
+        ...args.slice(1),
+      );
+      console.error(msg);
+    }
   }
 
   warn(tag: string, ...args: any): void {

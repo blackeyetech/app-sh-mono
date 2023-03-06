@@ -275,7 +275,8 @@ export class AppSh {
         });
       }
 
-      rl.question(ask, (answer) => {
+      // Insert a space after the question for convience
+      rl.question(`${ask} `, (answer) => {
         resolve(answer);
         rl.close();
       });

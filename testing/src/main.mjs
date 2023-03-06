@@ -69,8 +69,8 @@ sh.info("%j", res);
 //   sh.info("Header: %s: %s", header[0], header[1]);
 // }
 
-// let answer = await sh.question("Hit return to continue?");
-// sh.info("You are doing %s", answer);
+let answer = await AppSh.question("Hit return to continue?");
+sh.info("You are doing %s", answer);
 
 // sh.shutdownError();
 

@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.4.0
+
+### Minor Changes
+
+- Now suppressing error message if log level is COMPLETE_SILENCE
+
 ## 1.3.16
 
 ### Patch Changes
