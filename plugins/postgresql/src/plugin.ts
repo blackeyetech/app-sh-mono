@@ -44,6 +44,20 @@ export type PostgreSqlDeleteOptions = {
   criteria?: Record<string, any>;
 };
 
+export class PostgresSqlError {
+  severity: string;
+  code: string;
+  detail: string;
+  message: string;
+
+  constructor(severity: string, code: string, detail: string, message: string) {
+    this.severity = severity;
+    this.code = code;
+    this.detail = detail;
+    this.message = message;
+  }
+}
+
 // PostgreSql class here
 export class PostgreSql extends AppShPlugin {
   // Properties here
@@ -190,10 +204,9 @@ export class PostgreSql extends AppShPlugin {
 
     let client = options?.client === undefined ? this._pool : options.client;
 
-    let res = await client.query(query).catch((e: Error) => {
-      // TODO: Improve error handling
+    let res = await client.query(query).catch((e) => {
       this.error("'%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request");
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rows;
@@ -293,9 +306,8 @@ export class PostgreSql extends AppShPlugin {
     this.debug("read() query: (%j)", query);
 
     let res = await client.query(query).catch((e) => {
-      // TODO: Improve error handling
       this.error("'%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request!");
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rows;
@@ -351,9 +363,8 @@ export class PostgreSql extends AppShPlugin {
     let client = opts.client === undefined ? this._pool : opts.client;
 
     let res = await client.query(query).catch((e) => {
-      // TODO: Improve error handling
-      this.error("%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request!");
+      this.error("'%s' happened for query (%j)", e, query);
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rowCount;
@@ -395,9 +406,8 @@ export class PostgreSql extends AppShPlugin {
     let client = opts.client === undefined ? this._pool : opts.client;
 
     let res = await client.query(query).catch((e) => {
-      // TODO: Improve error handling
       this.error("'%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request!");
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rowCount;
@@ -407,9 +417,8 @@ export class PostgreSql extends AppShPlugin {
     let pgClient = client === undefined ? this._pool : client;
 
     let res = await pgClient.query(query).catch((e) => {
-      // TODO: Improve error handling
       this.error("'%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request!");
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rows;
@@ -421,9 +430,8 @@ export class PostgreSql extends AppShPlugin {
     let pgClient = client === undefined ? this._pool : client;
 
     let res = await pgClient.query(query).catch((e) => {
-      // TODO: Improve error handling
       this.error("'%s' happened for query (%j)", e, query);
-      throw new Error("Something wrong with your request!");
+      throw new PostgresSqlError(e.severity, e.code, e.detail, e.toString());
     });
 
     return res.rowCount;

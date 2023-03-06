@@ -1,5 +1,11 @@
 # @app-sh/postgresql
 
+## 1.1.0
+
+### Minor Changes
+
+- Added better error reporting
+
 ## 1.0.8
 
 ### Patch Changes
