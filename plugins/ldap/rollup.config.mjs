@@ -44,7 +44,7 @@ export default [
       file: "dist/plugin.mjs",
       format: "es",
     },
-    external: ["app-sh"],
+    external: ["app-sh", "ldapjs"],
 
     plugins,
   },
@@ -55,7 +55,7 @@ export default [
       file: "dist/plugin.cjs",
       format: "cjs",
     },
-    external: ["app-sh"],
+    external: ["app-sh", "ldapjs"],
 
     plugins,
   },

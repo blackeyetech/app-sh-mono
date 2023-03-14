@@ -17,6 +17,7 @@ export type LdapConfig = {
 };
 
 // Default configs here
+const ATTRIB_DM = "distinguishedName";
 
 // Ldap class here
 export class Ldap extends AppShPlugin {
@@ -170,7 +171,7 @@ export class Ldap extends AppShPlugin {
     }
 
     // bind to temp connection as the user to test creds
-    let userDn = <string>attribs.dn; // This will be there because we asked for it!
+    let userDn = <string>attribs[ATTRIB_DM]; // This will be there because we asked for it!
     let bound = await this.ldapBind(client, userDn, password).catch(() => {});
 
     // Tidy up before you do anything else
@@ -274,7 +275,7 @@ export class Ldap extends AppShPlugin {
     // Since bind requires a callback return a Promise to handle it
     return new Promise((resolve) => {
       client.bind(userDn, password, (e) => {
-        if (e) {
+        if (e !== null) {
           this.error(
             "LDAPBind: There was and error binding the LDAP user (%s): (%s)",
             userDn,
@@ -344,7 +345,7 @@ export class Ldap extends AppShPlugin {
     return new Promise((resolve, reject) => {
       // Since search requires a callback return a Promise to handle it
       this._serviceLdapClient?.search(this._userDnBase, opts, (e, res) => {
-        if (e) {
+        if (e !== null) {
           this.error(
             "LDAPUserSearch: There was and error searching for mail (%s): (%s)",
             user,
@@ -359,7 +360,13 @@ export class Ldap extends AppShPlugin {
         res.on("searchEntry", (entry) => {
           // Don't resolve yet, the "end" event will be called last
           for (let attrib of attributes) {
-            results[attrib] = <string>entry.object[attrib];
+            let found = entry.attributes.find((el) => el.type === ATTRIB_DM);
+            if (found !== undefined) {
+              // SearchEntry doesn't have a "values" property defined
+              // so this is a temp work around
+              let tmpAttributes = <any>found;
+              results[attrib] = tmpAttributes.values[0];
+            }
           }
           this.debug(
             "LDAPUserSearch: Attribs for (%s) are (%s)",
@@ -378,8 +385,8 @@ export class Ldap extends AppShPlugin {
         });
 
         res.on("end", () => {
-          // If cn was not found then the user does not exist - so reject
-          if (results.dn === undefined) {
+          // If ATTRIB_DM was not found then the user does not exist - so reject
+          if (results[ATTRIB_DM] === undefined) {
             reject();
           }
 
