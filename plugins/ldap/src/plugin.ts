@@ -333,7 +333,7 @@ export class Ldap extends AppShPlugin {
     userAttribute: string = "sAMAccountName",
   ): Promise<Record<string, string | number>> {
     // Atributes to get back from LDAP search - always get "dn"
-    let attributes = ["dn"];
+    let attributes = [ATTRIB_DM];
 
     // We will always be searching by the users email
     const opts: ldap.SearchOptions = {
