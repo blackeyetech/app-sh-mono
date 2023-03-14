@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "@app-sh/postgresql",
   "description": "App Shell pulgin for PostgreSQL",
   "exports": {
@@ -15,7 +15,7 @@
   "scripts": {
     "rollup": "rollup -c rollup.config.mjs",
     "build-dev": "tsc --sourceMap && npm run rollup",
-    "build-prod": "npm run clean && tsc && npm run rollup",
+    "build-prod": "npm run clean && tsc && NODE_ENV=production npm run rollup",
     "format-ts": "prettier --write 'src/**/*.ts'",
     "format-js": "prettier --write 'dist/**/*.{js,ts}'",
     "format-misc": "prettier --write '**/*.{json,md,yaml}'",

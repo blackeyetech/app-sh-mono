@@ -1,7 +1,7 @@
 {
-  "version": "1.0.11",
-  "name": "@app-sh/o365",
-  "description": "App Shell plugin for Office 365",
+  "version": "1.0.0",
+  "name": "@app-sh/ldap",
+  "description": "App Shell plugin for LDAP",
   "exports": {
     "require": "./dist/plugin.cjs",
     "import": "./dist/plugin.mjs"
@@ -31,19 +31,18 @@
   "keywords": [
     "Application",
     "Shell",
-    "Plugin",
-    "Office 365",
-    "Outlook"
+    "LDAP"
   ],
   "author": "Black Eye Technology",
   "license": "MIT",
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   },
   "dependencies": {
-    "app-sh": "workspace:^1.3.5"
+    "app-sh": "workspace:^1.4.0",
+    "ldapjs": "^3.0.1"
   },
   "devDependencies": {
-    "@microsoft/microsoft-graph-types": "^2.26.0"
+    "@types/ldapjs": "^2.2.5"
   }
 }

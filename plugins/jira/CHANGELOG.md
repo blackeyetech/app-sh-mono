@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.0.9
+
+### Patch Changes
+
+- Updated package.json to ensure the published packages are tersed
+
 ## 1.0.8
 
 ### Patch Changes
