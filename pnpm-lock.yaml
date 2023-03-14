@@ -53,6 +53,17 @@ importers:
     dependencies:
       app-sh: link:../../app-sh
 
+  plugins/ldap:
+    specifiers:
+      "@types/ldapjs": ^2.2.5
+      app-sh: workspace:^1.4.0
+      ldapjs: ^3.0.1
+    dependencies:
+      app-sh: link:../../app-sh
+      ldapjs: 3.0.1
+    devDependencies:
+      "@types/ldapjs": 2.2.5
+
   plugins/o365:
     specifiers:
       "@microsoft/microsoft-graph-types": ^2.26.0
@@ -659,6 +670,95 @@ packages:
       }
     dev: false
 
+  /@ldapjs/asn1/1.2.0:
+    resolution:
+      {
+        integrity: sha512-KX/qQJ2xxzvO2/WOvr1UdQ+8P5dVvuOLk/C9b1bIkXxZss8BaR28njXdPgFCpj5aHaf1t8PmuVnea+N9YG9YMw==,
+      }
+    dev: false
+
+  /@ldapjs/asn1/2.0.0:
+    resolution:
+      {
+        integrity: sha512-G9+DkEOirNgdPmD0I8nu57ygQJKOOgFEMKknEuQvIHbGLwP3ny1mY+OTUYLCbCaGJP4sox5eYgBJRuSUpnAddA==,
+      }
+    dev: false
+
+  /@ldapjs/attribute/1.0.0:
+    resolution:
+      {
+        integrity: sha512-ptMl2d/5xJ0q+RgmnqOi3Zgwk/TMJYG7dYMC0Keko+yZU6n+oFM59MjQOUht5pxJeS4FWrImhu/LebX24vJNRQ==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      "@ldapjs/protocol": 1.2.1
+      process-warning: 2.1.0
+    dev: false
+
+  /@ldapjs/change/1.0.0:
+    resolution:
+      {
+        integrity: sha512-EOQNFH1RIku3M1s0OAJOzGfAohuFYXFY4s73wOhRm4KFGhmQQ7MChOh2YtYu9Kwgvuq1B0xKciXVzHCGkB5V+Q==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      "@ldapjs/attribute": 1.0.0
+    dev: false
+
+  /@ldapjs/controls/2.0.0:
+    resolution:
+      {
+        integrity: sha512-NpFmdIc2q83tYRGR2a3NDulKgU1e4YOgqjQmmMezCoN4Xz0tju4yB4eibQNC+Zg8YRW06KPwFPKbebDaCqFF0w==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 1.2.0
+      "@ldapjs/protocol": 1.2.1
+    dev: false
+
+  /@ldapjs/dn/1.0.0:
+    resolution:
+      {
+        integrity: sha512-qPsJDC5dQU2TSkA/IpswvPEg9MU6TIjjq0UOCHtuUeD3eWihTUjHuu/dith4NFRKjBvgFnqRQvo+t0YC+3z0Rw==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      process-warning: 2.1.0
+    dev: false
+
+  /@ldapjs/filter/2.0.0:
+    resolution:
+      {
+        integrity: sha512-7hMv5DNlHJk4qoGzCFGbbSV0vgvn2A7hZ4mt15557xDhw+BXjhryBvs8ANTHUpyaWvESbU+oNOsbBobNLZ45Nw==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      "@ldapjs/protocol": 1.2.1
+      process-warning: 2.1.0
+    dev: false
+
+  /@ldapjs/messages/1.0.1:
+    resolution:
+      {
+        integrity: sha512-1S/Y9QqyYTI97RJHuJqSnNTr8iXunY8KK+E0KDwNsT69X7ftxH2LIV+232/BV0KIMQ0yYTxroQAIdYmWTni1IA==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      "@ldapjs/attribute": 1.0.0
+      "@ldapjs/change": 1.0.0
+      "@ldapjs/controls": 2.0.0
+      "@ldapjs/dn": 1.0.0
+      "@ldapjs/filter": 2.0.0
+      "@ldapjs/protocol": 1.2.1
+      process-warning: 2.1.0
+    dev: false
+
+  /@ldapjs/protocol/1.2.1:
+    resolution:
+      {
+        integrity: sha512-O89xFDLW2gBoZWNXuXpBSM32/KealKCTb3JGtJdtUQc7RjAk8XzrRgyz02cPAwGKwKPxy0ivuC7UP9bmN87egQ==,
+      }
+    dev: false
+
   /@manypkg/find-root/1.1.0:
     resolution:
       {
@@ -892,6 +992,15 @@ packages:
       ci-info: 3.8.0
     dev: true
 
+  /@types/ldapjs/2.2.5:
+    resolution:
+      {
+        integrity: sha512-Lv/nD6QDCmcT+V1vaTRnEKE8UgOilVv5pHcQuzkU1LcRe4mbHHuUo/KHi0LKrpdHhQY8FJzryF38fcVdeUIrzg==,
+      }
+    dependencies:
+      "@types/node": 18.14.0
+    dev: true
+
   /@types/minimist/1.2.2:
     resolution:
       {
@@ -963,6 +1072,13 @@ packages:
     dependencies:
       "@types/node": 18.14.0
     dev: true
+
+  /abstract-logging/2.0.1:
+    resolution:
+      {
+        integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==,
+      }
+    dev: false
 
   /acorn-walk/8.2.0:
     resolution:
@@ -1109,6 +1225,14 @@ packages:
     engines: { node: ">=0.10.0" }
     dev: true
 
+  /assert-plus/1.0.0:
+    resolution:
+      {
+        integrity: sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==,
+      }
+    engines: { node: ">=0.8" }
+    dev: false
+
   /astral-regex/2.0.0:
     resolution:
       {
@@ -1139,6 +1263,16 @@ packages:
         integrity: sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==,
       }
     engines: { node: ">= 0.4" }
+
+  /backoff/2.5.0:
+    resolution:
+      {
+        integrity: sha512-wC5ihrnUXmR2douXmXLCe5O3zg3GKIyvRi/hi58a/XyRxVI+3/yM0PYueQOZXPXQ9pxBislYkw+sF9b7C/RuMA==,
+      }
+    engines: { node: ">= 0.6" }
+    dependencies:
+      precond: 0.2.3
+    dev: false
 
   /balanced-match/1.0.2:
     resolution:
@@ -1446,6 +1580,13 @@ packages:
     resolution:
       {
         integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==,
+      }
+    dev: false
+
+  /core-util-is/1.0.2:
+    resolution:
+      {
+        integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==,
       }
     dev: false
 
@@ -1843,6 +1984,14 @@ packages:
       iconv-lite: 0.4.24
       tmp: 0.0.33
     dev: true
+
+  /extsprintf/1.4.1:
+    resolution:
+      {
+        integrity: sha512-Wrk35e8ydCKDj/ArClo1VrPVmN8zph5V4AtHwIuHhvMXsKf73UT3BOD+azBIW+3wOJ4FhEH7zyaJCFvChjYvMA==,
+      }
+    engines: { "0": node >=0.6.0 }
+    dev: false
 
   /fast-glob/3.2.12:
     resolution:
@@ -2687,6 +2836,28 @@ packages:
     engines: { node: ">=6" }
     dev: true
 
+  /ldapjs/3.0.1:
+    resolution:
+      {
+        integrity: sha512-/bOFimHRBBMalpApgBeDNBTdQcK9wf9OCpZ3jloqJ9EPnSqCpKbGJ8cp81qHMfjlodpq8V9zgJTqWZ0/Bv/eUg==,
+      }
+    dependencies:
+      "@ldapjs/asn1": 2.0.0
+      "@ldapjs/attribute": 1.0.0
+      "@ldapjs/change": 1.0.0
+      "@ldapjs/controls": 2.0.0
+      "@ldapjs/dn": 1.0.0
+      "@ldapjs/filter": 2.0.0
+      "@ldapjs/messages": 1.0.1
+      "@ldapjs/protocol": 1.2.1
+      abstract-logging: 2.0.1
+      assert-plus: 1.0.0
+      backoff: 2.5.0
+      once: 1.4.0
+      vasync: 2.2.1
+      verror: 1.10.1
+    dev: false
+
   /lilconfig/2.0.6:
     resolution:
       {
@@ -3426,6 +3597,14 @@ packages:
     dependencies:
       xtend: 4.0.2
 
+  /precond/0.2.3:
+    resolution:
+      {
+        integrity: sha512-QCYG84SgGyGzqJ/vlMsxeXd/pgL/I94ixdNFyh1PusWmTCyVfPJjZ1K1jvHtsbfnXQs2TSkEP2fR7QiMZAnKFQ==,
+      }
+    engines: { node: ">= 0.6" }
+    dev: false
+
   /preferred-pm/3.0.3:
     resolution:
       {
@@ -3447,6 +3626,13 @@ packages:
     engines: { node: ">=10.13.0" }
     hasBin: true
     dev: true
+
+  /process-warning/2.1.0:
+    resolution:
+      {
+        integrity: sha512-9C20RLxrZU/rFnxWncDkuF6O999NdIf3E1ws4B0ZeY3sRVPzWBMsYDE2lxjxhiXxg464cQTgKUGm8/i6y2YGXg==,
+      }
+    dev: false
 
   /pseudomap/1.0.2:
     resolution:
@@ -4356,6 +4542,40 @@ packages:
       spdx-correct: 3.1.1
       spdx-expression-parse: 3.0.1
     dev: true
+
+  /vasync/2.2.1:
+    resolution:
+      {
+        integrity: sha512-Hq72JaTpcTFdWiNA4Y22Amej2GH3BFmBaKPPlDZ4/oC8HNn2ISHLkFrJU4Ds8R3jcUi7oo5Y9jcMHKjES+N9wQ==,
+      }
+    engines: { "0": node >=0.6.0 }
+    dependencies:
+      verror: 1.10.0
+    dev: false
+
+  /verror/1.10.0:
+    resolution:
+      {
+        integrity: sha512-ZZKSmDAEFOijERBLkmYfJ+vmk3w+7hOLYDNkRCuRuMJGEmqYNCNLyBBFwWKVMhfwaEF3WOd0Zlw86U/WC/+nYw==,
+      }
+    engines: { "0": node >=0.6.0 }
+    dependencies:
+      assert-plus: 1.0.0
+      core-util-is: 1.0.2
+      extsprintf: 1.4.1
+    dev: false
+
+  /verror/1.10.1:
+    resolution:
+      {
+        integrity: sha512-veufcmxri4e3XSrT0xwfUR7kguIkaxBeosDg00yDWhk49wdwkSUrvvsm7nc75e1PUyvIeZj6nS8VQRYz2/S4Xg==,
+      }
+    engines: { node: ">=0.6.0" }
+    dependencies:
+      assert-plus: 1.0.0
+      core-util-is: 1.0.2
+      extsprintf: 1.4.1
+    dev: false
 
   /wcwidth/1.0.1:
     resolution:

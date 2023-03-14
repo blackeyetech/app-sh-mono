@@ -4,4 +4,5 @@ packages:
   - plugins/postgresql
   - plugins/jira
   - plugins/sql-server
+  - plugins/ldap
   - testing
