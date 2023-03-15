@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.6.0
+
+### Minor Changes
+
+- Adding the ability to specify a Appsh config to a plugin
+
 ## 1.5.0
 
 ### Minor Changes

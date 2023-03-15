@@ -630,6 +630,7 @@ export type AppShPluginConfig = {
   name: string;
   pluginVersion: string;
   appSh?: AppSh;
+  appShConfig?: AppShConfig;
 };
 
 // AppShPlugin class here
@@ -643,7 +644,8 @@ export class AppShPlugin {
   constructor(config: AppShPluginConfig) {
     this._name = config.name;
     this._pluginVersion = config.pluginVersion;
-    this._appSh = config.appSh === undefined ? new AppSh() : config.appSh;
+    this._appSh =
+      config.appSh === undefined ? new AppSh(config.appShConfig) : config.appSh;
 
     this._appSh.addPlugin(this, async () => {
       this.stop();
