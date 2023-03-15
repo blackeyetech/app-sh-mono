@@ -1,5 +1,5 @@
 // imports here
-import { AppSh, AppShPlugin } from "app-sh";
+import { AppSh, AppShPlugin, AppShConfig } from "app-sh";
 
 // Types here
 export type AuthDetails = {
@@ -9,6 +9,7 @@ export type AuthDetails = {
 
 export type JiraConfig = {
   appSh?: AppSh;
+  appShConfig?: AppShConfig;
 
   server: string;
   user: string;
@@ -79,6 +80,7 @@ export class Jira extends AppShPlugin {
     super({
       name: "Jira",
       appSh: jiraConfig.appSh,
+      appShConfig: jiraConfig.appShConfig,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

@@ -1,5 +1,5 @@
 // imports here
-import { AppSh, AppShPlugin } from "app-sh";
+import { AppSh, AppShPlugin, AppShConfig } from "app-sh";
 
 import * as mssql from "mssql";
 
@@ -15,6 +15,7 @@ interface CustomMsIResult<T> extends mssql.IResult<T> {
 // Types here
 export type SqlServerConfig = {
   appSh?: AppSh;
+  appShConfig?: AppShConfig;
 
   database: string;
   user: string;
@@ -109,6 +110,7 @@ export class SqlServer extends AppShPlugin {
     super({
       name: "SqlServer",
       appSh: sqlServerConfig.appSh,
+      appShConfig: sqlServerConfig.appShConfig,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

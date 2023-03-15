@@ -1,11 +1,12 @@
 // imports here
-import { AppSh, AppShPlugin } from "app-sh";
+import { AppSh, AppShPlugin, AppShConfig } from "app-sh";
 
 import * as pg from "pg";
 
 // Types here
 export type PostgreSqlConfig = {
   appSh?: AppSh;
+  appShConfig?: AppShConfig;
 
   database: string;
   user: string;
@@ -67,6 +68,7 @@ export class PostgreSql extends AppShPlugin {
     super({
       name: "PostgreSQL",
       appSh: postgresqlConfig.appSh,
+      appShConfig: postgresqlConfig.appShConfig,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

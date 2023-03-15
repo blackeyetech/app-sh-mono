@@ -1,5 +1,5 @@
 // imports here
-import { AppSh, AppShPlugin } from "app-sh";
+import { AppSh, AppShPlugin, AppShConfig } from "app-sh";
 
 import * as MSGraph from "@microsoft/microsoft-graph-types";
 
@@ -8,6 +8,7 @@ import querystring from "node:querystring";
 // Types here
 export type O365Config = {
   appSh?: AppSh;
+  appShConfig?: AppShConfig;
 
   appId: string;
   clientSecret: string;
@@ -52,6 +53,7 @@ export class O365 extends AppShPlugin {
     super({
       name: "o365",
       appSh: o365Config.appSh,
+      appShConfig: o365Config.appShConfig,
       // NOTE: PLUGIN_VERSION is replaced with package.json#version by a
       // rollup plugin at build time
       pluginVersion: "PLUGIN_VERSION",

@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "@app-sh/ldap",
   "description": "App Shell plugin for LDAP",
   "exports": {
@@ -39,7 +39,7 @@
     "access": "public"
   },
   "dependencies": {
-    "app-sh": "workspace:^1.4.0",
+    "app-sh": "workspace:^1.6.0",
     "ldapjs": "^3.0.1"
   },
   "devDependencies": {

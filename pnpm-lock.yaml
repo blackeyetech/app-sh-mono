@@ -49,14 +49,14 @@ importers:
 
   plugins/jira:
     specifiers:
-      app-sh: workspace:^1.3.3
+      app-sh: workspace:^1.6.0
     dependencies:
       app-sh: link:../../app-sh
 
   plugins/ldap:
     specifiers:
       "@types/ldapjs": ^2.2.5
-      app-sh: workspace:^1.4.0
+      app-sh: workspace:^1.6.0
       ldapjs: ^3.0.1
     dependencies:
       app-sh: link:../../app-sh
@@ -67,7 +67,7 @@ importers:
   plugins/o365:
     specifiers:
       "@microsoft/microsoft-graph-types": ^2.26.0
-      app-sh: workspace:^1.3.3
+      app-sh: workspace:^1.6.0
     dependencies:
       app-sh: link:../../app-sh
     devDependencies:
@@ -76,7 +76,7 @@ importers:
   plugins/postgresql:
     specifiers:
       "@types/pg": ^8.6.6
-      app-sh: workspace:^1.3.5
+      app-sh: workspace:^1.6.0
       pg: ^8.9.0
     dependencies:
       app-sh: link:../../app-sh
@@ -87,7 +87,7 @@ importers:
   plugins/sql-server:
     specifiers:
       "@types/mssql": ^8.1.2
-      app-sh: workspace:^1.3.3
+      app-sh: workspace:^1.6.0
       mssql: ^9.1.1
     dependencies:
       app-sh: link:../../app-sh

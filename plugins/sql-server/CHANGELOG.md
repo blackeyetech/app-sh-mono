@@ -1,5 +1,11 @@
 # @app-sh/sql-server
 
+## 1.1.0
+
+### Minor Changes
+
+- Added the ability to provide an AppSh config to the plugins
+
 ## 1.0.9
 
 ### Patch Changes
