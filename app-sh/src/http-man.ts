@@ -185,7 +185,7 @@ export class HttpMan {
 
     if (this._enableHttps) {
       this._keyFile = config.httpsKeyFile;
-      this._certFile = config.httpsKeyFile;
+      this._certFile = config.httpsCertFile;
     }
 
     this._defaultMiddlewareList = config.defaultMiddlewareList;
@@ -260,13 +260,11 @@ export class HttpMan {
       this._baseUrl = `https://${this._networkIp}:${this._networkPort}`;
 
       if (this._keyFile === undefined) {
-        throw new HttpConfigError(
-          "HTTPS is enabled but no key file pprovided!",
-        );
+        throw new HttpConfigError("HTTPS is enabled but no key file provided!");
       }
       if (this._certFile === undefined) {
         throw new HttpConfigError(
-          "HTTPS is enabled but no cert file pprovided!",
+          "HTTPS is enabled but no cert file provided!",
         );
       }
 
