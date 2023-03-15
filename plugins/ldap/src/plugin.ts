@@ -292,6 +292,13 @@ export class Ldap extends AppShPlugin {
     userDn: string,
     password: string,
   ): Promise<boolean> {
+    // ldapjs allows you to successfully bind a user with no password (this is
+    // AD specific behavior) - but we won't allow that so check for it first
+    if (password === undefined || password.length === 0) {
+      this.warn("User with DN (%s) entered an empty password!", userDn);
+      return false;
+    }
+
     // Since bind requires a callback return a Promise to handle it
     return new Promise((resolve) => {
       client.bind(userDn, password, (e) => {
