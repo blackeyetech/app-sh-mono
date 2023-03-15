@@ -12,10 +12,25 @@ import * as fs from "node:fs";
 export { SseServer, SseServerOptions };
 
 // Types here
+export interface HttpServerResponse extends http.ServerResponse {
+  json?: object | [] | string | number | boolean;
+  html?: string | Buffer;
+  text?: string | Buffer;
+}
+
+export interface HttpServerRequest extends http.IncomingMessage {
+  params: Record<string, any>;
+  urlObject: URL;
+  middlewareProps: Record<string, any>;
+
+  sseServer?: SseServer;
+  json?: any;
+  body?: Buffer;
+}
+
 export type Middleware = (
-  req: http.IncomingMessage,
+  req: HttpServerRequest,
   res: HttpServerResponse,
-  details: EndpointCallbackDetails,
   next: () => Promise<void>,
 ) => Promise<void>;
 
@@ -39,24 +54,10 @@ export type EndpointOptions = {
   corsOptions?: CorsOptions;
 };
 
-export type EndpointCallbackDetails = {
-  url: URL;
-  params: Record<string, any>;
-  middlewareProps: Record<string, any>;
-  sseServer?: SseServer;
-};
-
 export type EndpointCallback = (
-  req: http.IncomingMessage,
+  req: HttpServerRequest,
   res: HttpServerResponse,
-  details: EndpointCallbackDetails,
 ) => Promise<void> | void;
-
-export class HttpServerResponse extends http.ServerResponse {
-  json?: object | [] | string | number | boolean;
-  html?: string | Buffer;
-  text?: string | Buffer;
-}
 
 type MethodListElement = {
   matchFunc: PathToRegEx.MatchFunction<object>;
@@ -301,15 +302,14 @@ export class HttpMan {
     this._server.headersTimeout = this._httpHeaderTimeout;
 
     // Now we need to add an endpoint for healthchecks
-    this.endpoint("GET", this._healthCheckPath, (req, res, details) =>
-      this.healthcheckCallback(req, res, details),
+    this.endpoint("GET", this._healthCheckPath, (req, res) =>
+      this.healthcheckCallback(req, res),
     );
   }
 
   private handlePreflightReq(
-    req: http.IncomingMessage,
+    req: HttpServerRequest,
     res: HttpServerResponse,
-    url: URL,
   ): void {
     // Get the method and origin. Both MUST be available or its not valid
     let method = req.headers["access-control-request-method"];
@@ -335,7 +335,7 @@ export class HttpMan {
     let foundEl: MethodListElement | undefined;
 
     for (let el of list) {
-      let result = el.matchFunc(url.pathname);
+      let result = el.matchFunc(req.urlObject.pathname);
 
       // If result is false that means we found nothing
       if (result === false) {
@@ -360,7 +360,7 @@ export class HttpMan {
   }
 
   private setCorsHeaders(
-    req: http.IncomingMessage,
+    req: HttpServerRequest,
     res: HttpServerResponse,
     foundEl: MethodListElement,
     origin: string,
@@ -429,16 +429,25 @@ export class HttpMan {
   }
 
   private async handleHttpReq(
-    req: http.IncomingMessage,
+    origReq: http.IncomingMessage,
     res: HttpServerResponse,
     protocol: "http" | "https",
   ): Promise<void> {
-    let url = new URL(<string>req.url, `${protocol}://${req.headers.host}`);
+    // Convert the incoming message to our type so we can add our extra props
+    let req = origReq as HttpServerRequest;
+
+    req.urlObject = new URL(
+      <string>req.url,
+      `${protocol}://${req.headers.host}`,
+    );
+    req.params = {};
+    req.middlewareProps = {};
+
     let method = <Method>req.method;
 
     // Check for a CORS preflight request
     if (method === "OPTIONS") {
-      this.handlePreflightReq(req, res, url);
+      this.handlePreflightReq(req, res);
       return;
     }
 
@@ -456,21 +465,18 @@ export class HttpMan {
     let found = false;
 
     for (let el of list) {
-      let result = el.matchFunc(url.pathname);
+      let result = el.matchFunc(req.urlObject.pathname);
 
       // If result is false that means we found nothing
       if (result === false) {
         continue;
       }
 
-      // If we are here we found a callback - process it and stop looking
-      let details: EndpointCallbackDetails = {
-        url,
-        params: <Record<string, any>>result.params,
-        middlewareProps: {},
-      };
+      // Don't forget to set the url parameters
+      req.params = result.params;
 
-      await this.callMiddleware(req, res, details, el, el.middlewareList);
+      // If we are here we found a callback - process it and stop looking
+      await this.callMiddleware(req, res, el, el.middlewareList);
 
       found = true;
       break;
@@ -484,33 +490,25 @@ export class HttpMan {
   }
 
   private async callMiddleware(
-    req: http.IncomingMessage,
+    req: HttpServerRequest,
     res: HttpServerResponse,
-    details: EndpointCallbackDetails,
     el: MethodListElement,
     middlewareStack: Middleware[],
   ): Promise<void> {
     // If there is a middleware to call ...
     if (middlewareStack.length) {
       // ... then call it and pass the middlewares AFTER this in the next()
-      await middlewareStack[0](req, res, details, async () => {
-        await this.callMiddleware(
-          req,
-          res,
-          details,
-          el,
-          middlewareStack.slice(1),
-        );
+      await middlewareStack[0](req, res, async () => {
+        await this.callMiddleware(req, res, el, middlewareStack.slice(1));
       });
     } else {
-      await this.callEndpoint(req, res, details, el);
+      await this.callEndpoint(req, res, el);
     }
   }
 
   private async callEndpoint(
-    req: http.IncomingMessage,
+    req: HttpServerRequest,
     res: HttpServerResponse,
-    details: EndpointCallbackDetails,
     el: MethodListElement,
   ): Promise<void> {
     // Handle CORS request if it is enabled
@@ -532,17 +530,17 @@ export class HttpMan {
 
     // Check if this should be a server sent event endpoint
     if (el.sseServerOptions !== undefined) {
-      details.sseServer = new SseServer(req, res, el.sseServerOptions);
+      req.sseServer = new SseServer(req, res, el.sseServerOptions);
     }
 
     // The callback can be async or not so check for it
     try {
       if (el.callback.constructor.name === "AsyncFunction") {
         // This is async so use await
-        await el.callback(req, res, details);
+        await el.callback(req, res);
       } else {
         // This is a synchronous call
-        el.callback(req, res, details);
+        el.callback(req, res);
       }
 
       // Now see if the user wants us to handle their response
@@ -557,7 +555,7 @@ export class HttpMan {
         this._logger.error(
           this._loggerTag,
           "Unknown error happened while handling URL (%s) - (%s)",
-          details.url.pathname,
+          req.urlObject?.pathname,
           e,
         );
       }
@@ -599,9 +597,8 @@ export class HttpMan {
   }
 
   private async healthcheckCallback(
-    _1: http.IncomingMessage,
+    _1: HttpServerRequest,
     res: HttpServerResponse,
-    _2: EndpointCallbackDetails,
   ): Promise<void> {
     let healthy = true;
 
@@ -709,9 +706,8 @@ export class HttpMan {
     };
 
     return async (
-      req: http.IncomingMessage,
+      req: HttpServerRequest,
       res: HttpServerResponse,
-      details: EndpointCallbackDetails,
       next: () => Promise<void>,
     ): Promise<void> => {
       // Store each data "chunk" we receive this array
@@ -738,8 +734,8 @@ export class HttpMan {
 
       // This event fires when we have received all of the body
       req.on("end", async () => {
-        // Set the body in details for the callback
-        details.middlewareProps.body = Buffer.concat(chunks);
+        // Set the body in the req for the callback
+        req.body = Buffer.concat(chunks);
 
         await next();
       });
@@ -748,16 +744,15 @@ export class HttpMan {
 
   static json(): Middleware {
     return async (
-      req: http.IncomingMessage,
+      req: HttpServerRequest,
       res: HttpServerResponse,
-      details: EndpointCallbackDetails,
       next: () => Promise<void>,
     ): Promise<void> => {
       // Before we do anything make sure there is a body!
       let body: Buffer | undefined;
 
-      if (Buffer.isBuffer(details.middlewareProps.body)) {
-        body = details.middlewareProps.body;
+      if (Buffer.isBuffer(req.body)) {
+        body = req.body;
       }
 
       if (body === undefined || body.length === 0) {
@@ -809,7 +804,7 @@ export class HttpMan {
         return;
       }
 
-      details.middlewareProps.json = jsonBody;
+      req.json = jsonBody;
       await next();
     };
   }

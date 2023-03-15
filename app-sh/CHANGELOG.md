@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.5.0
+
+### Minor Changes
+
+- Moved so of the HTTP req message props to the actual req message
+
 ## 1.4.0
 
 ### Minor Changes

@@ -7,10 +7,10 @@ import {
   HttpMan,
   Middleware,
   EndpointCallback,
-  EndpointCallbackDetails,
   HttpConfig,
   HttpError,
   HttpConfigError,
+  HttpServerRequest,
   HttpServerResponse,
 } from "./http-man";
 
@@ -19,14 +19,13 @@ import * as readline from "node:readline";
 export {
   Logger,
   LogLevel,
-  ConfigTypes,
   HttpMan,
   Middleware,
   EndpointCallback,
-  EndpointCallbackDetails,
   HttpConfig,
   HttpError,
   HttpConfigError,
+  HttpServerRequest,
   HttpServerResponse,
 };
 
