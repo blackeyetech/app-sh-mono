@@ -196,6 +196,7 @@ httpMan1.endpoint("GET", "/login", (req, res, details) => {
 });
 
 httpMan1.endpoint("POST", "/login/attempt", (req, res, details) => {
+  console.log(req.json);
   res.writeHead(302, { Location: "http://localhost:8081/?user=kieran" });
   res.end();
 });

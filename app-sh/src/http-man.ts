@@ -544,19 +544,25 @@ export class HttpMan {
       // Now see if the user wants us to handle their response
       this.handleUserResponse(res);
     } catch (e) {
+      // If it is a HttpError assume the error message has already been logged
       if (e instanceof HttpError) {
         res.statusCode = e.status;
         res.write(e.message);
-        res.end();
       } else {
-        // We don't know what this is so log it and leave it alone!
+        // We don't know what this is so log it and make sure to retrun a 500
         this._logger.error(
           this._loggerTag,
           "Unknown error happened while handling URL (%s) - (%s)",
           req.urlObject?.pathname,
           e,
         );
+
+        res.statusCode = 500;
+        res.write("Unknown error happened");
       }
+
+      // Make sure to close the connection
+      res.end();
     }
   }
 

@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.7.0
+
+### Minor Changes
+
+- Now catching unknown excceptions when handling the endpoint
+
 ## 1.6.1
 
 ### Patch Changes
