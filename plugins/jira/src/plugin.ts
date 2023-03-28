@@ -1,5 +1,5 @@
 // imports here
-import { AppSh, AppShPlugin, AppShConfig } from "app-sh";
+import { AppSh, AppShPlugin, AppShConfig, HttpReqResponse } from "app-sh";
 
 // Types here
 export type AuthDetails = {
@@ -45,7 +45,7 @@ export type JqlResults = {
 // Config consts here
 
 // Misc constants here
-const JiraResources: Record<string, string> = {
+export const JiraResources: Record<string, string> = {
   session: "/rest/auth/1/session",
   field: "/rest/api/2/field",
   project: "/rest/api/2/project",
@@ -828,5 +828,20 @@ export class Jira extends AppShPlugin {
     }).catch((e) => {
       this.error(e);
     });
+  }
+
+  public async restApiCall(
+    method: "GET" | "PUT" | "POST" | "DELETE" | "PATCH",
+    path: string,
+    body: any,
+  ): Promise<HttpReqResponse> {
+    let res = await this.httpReq(this._server, path, {
+      method,
+      headers:
+        this._sessionId === null ? this._basicAuthHeader : this._sessionHeader,
+      body,
+    });
+
+    return res;
   }
 }

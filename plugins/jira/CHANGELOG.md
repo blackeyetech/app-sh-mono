@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.1.1
+
+### Patch Changes
+
+- Added restApiCall to allow someone to make REST API calls not implimentted by the plugin
+
 ## 1.1.0
 
 ### Minor Changes

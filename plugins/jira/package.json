@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "@app-sh/jira",
   "description": "App Shell plugin for JIRA",
   "exports": {
