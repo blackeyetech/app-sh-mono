@@ -100,7 +100,7 @@ export class Jira extends AppShPlugin {
 
     this._sessionRefreshPeriod = config.sessionRefreshPeriod * 60 * 1000; // Convert to ms
 
-    this._sessionHeader = { cookie: `JSESSIONID=${this._sessionId}` };
+    this._sessionHeader = {};
 
     let token = Buffer.from(`${this._user}:${this._password}`).toString(
       "base64",
@@ -124,6 +124,8 @@ export class Jira extends AppShPlugin {
 
     let session = <sessionType>res.body;
     this._sessionId = session.session.value;
+
+    this._sessionHeader = { cookie: `JSESSIONID=${this._sessionId}` };
 
     // Start a timer to automatically renew the session ID
     this._timeout = setTimeout(() => {
@@ -149,6 +151,7 @@ export class Jira extends AppShPlugin {
 
     // Reset the session ID so we know we are not logged in
     this._sessionId = null;
+    this._sessionHeader = {};
   }
 
   public async getFieldDict(useCurrent: boolean = true): Promise<FieldDict> {

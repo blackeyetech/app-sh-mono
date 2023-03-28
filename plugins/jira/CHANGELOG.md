@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.2.0
+
+### Minor Changes
+
+- Fixed session header bug
+
 ## 1.1.1
 
 ### Patch Changes
