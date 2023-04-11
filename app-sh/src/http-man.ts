@@ -68,6 +68,16 @@ type MethodListElement = {
   corsOptions?: CorsOptions;
 };
 
+export type HttpCookie = {
+  name: string;
+  value: string;
+  maxAge?: number;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+};
+
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
 
 export class HttpError {
@@ -700,6 +710,56 @@ export class HttpMan {
       method.toUpperCase(),
       path,
     );
+  }
+
+  setCookies(res: HttpServerResponse, cookies: HttpCookie[]) {
+    let setCookiesValue: string[] = [];
+
+    // Loop through each cookie and build the cookie values
+    for (let cookie of cookies) {
+      // Set the cookie value first
+      let value = `${cookie.name}=${cookie.value}`;
+
+      // if there is a maxAge then set it - NOTE: put ";" first
+      if (cookie.maxAge !== undefined) {
+        value += `; Max-Age=${cookie.maxAge}`;
+      }
+      // If there is a path then set it or use default path of "/" - NOTE: put ";" first
+      if (cookie.path !== undefined) {
+        value += `; Path=${cookie.path}`;
+      } else {
+        value += `; Path=/`;
+      }
+      // If httpOnly is indicated then add it - NOTE: put ";" first
+      if (cookie.httpOnly === true) {
+        value += "; HttpOnly";
+      }
+      // If secure is indicated set then add it - NOTE: put ";" first
+      if (cookie.secure === true) {
+        value += "; Secure";
+      }
+      // If sameSite has been provided then add it - NOTE: put ";" first
+      if (cookie.sameSite !== undefined) {
+        value += `; SameSite=${cookie.sameSite}`;
+      }
+
+      // Save the cookie
+      setCookiesValue.push(value);
+    }
+
+    // Finally set the cookie/s in the response header
+    res.setHeader("Set-Cookie", setCookiesValue);
+  }
+
+  clearCookies(res: HttpServerResponse, cookies: string[]) {
+    let httpCookies: HttpCookie[] = [];
+
+    for (let cookie of cookies) {
+      // To clear a cookie - set value to empty string and max age to -1
+      httpCookies.push({ name: cookie, value: "", maxAge: -1 });
+    }
+
+    this.setCookies(res, httpCookies);
   }
 
   // Middleware methods here

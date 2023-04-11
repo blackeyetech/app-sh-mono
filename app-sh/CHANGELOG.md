@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.8.0
+
+### Minor Changes
+
+- Added setCookie() and clearCookie() methods on the HttpMan
+
 ## 1.7.0
 
 ### Minor Changes
