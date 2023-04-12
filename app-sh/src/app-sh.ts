@@ -63,10 +63,19 @@ export type HttpReqResponse = {
   statusCode: number;
   headers: Headers;
   body: any;
+  res?: Response;
 };
 
+export type HttpReqMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "OPTIONS";
+
 export type HttpReqOptions = {
-  method: "GET" | "PUT" | "POST" | "DELETE" | "PATCH";
+  method: HttpReqMethod;
   searchParams?: Record<string, string>;
   headers?: Record<string, string>;
   body?: object | [] | string;
@@ -76,6 +85,7 @@ export type HttpReqOptions = {
   };
   bearerToken?: string;
   timeout?: number;
+  handleResponse?: boolean;
 
   // These are additional options for fetch
   keepalive?: boolean;
@@ -455,64 +465,12 @@ export class AppSh {
     });
   }
 
-  async httpReq(
+  private async callFetch(
     origin: string,
     path: string,
-    reqOptions?: HttpReqOptions,
-  ): Promise<HttpReqResponse> {
-    let options = {
-      method: "GET",
-      headers: {},
-      timmeout: 0,
-      keepalive: true,
-      cache: <RequestCache>"no-store",
-      mode: <RequestMode>"cors",
-      credentials: <RequestCredentials>"include",
-      redirect: <RequestRedirect>"follow",
-      referrerPolicy: <ReferrerPolicy>"no-referrer",
-
-      ...reqOptions,
-    };
-
-    this.trace("httpReq for origin (%s) path (%s)", origin, path);
-
-    // If a bearer token is provided then add a Bearer auth header
-    if (options.bearerToken !== undefined) {
-      options.headers.Authorization = `Bearer ${options.bearerToken}`;
-    }
-
-    // If the basic auth creds are provided add a Basic auth header
-    if (options.auth !== undefined) {
-      let token = Buffer.from(
-        `${options.auth.username}:${options.auth.password}`,
-      ).toString("base64");
-      options.headers.Authorization = `Basic ${token}`;
-    }
-
-    let body: string | undefined;
-
-    // Automatically stringify and set the header if this is a JSON payload
-    // BUT dont do it for GETs and DELETE since they can have no body
-    if (
-      options.body !== undefined &&
-      options.method !== "GET" &&
-      options.method !== "DELETE"
-    ) {
-      // Rem an array is an object to!
-      if (typeof options.body === "object") {
-        // Add the content-type if it hasn't been provided
-        if (options.headers?.["content-type"] === undefined) {
-          options.headers["content-type"] = "application/json; charset=utf-8";
-        }
-
-        body = JSON.stringify(options.body);
-      } else {
-        body = options.body;
-      }
-    }
-
-    // NODE_TLS_REJECT_UNAUTHORIZED=0
-
+    options: HttpReqOptions,
+    body?: string,
+  ): Promise<Response> {
     // Build the url
     let url = `${origin}${path}`;
     // And add the query string if one has been provided
@@ -583,6 +541,12 @@ export class AppSh {
       );
     }
 
+    return results;
+  }
+
+  private async handleHttpReqResponseData(
+    results: Response,
+  ): Promise<object | string> {
     let resData: object | string;
 
     // Safest way to check for a body is the content-length header exists
@@ -615,10 +579,86 @@ export class AppSh {
       }
     }
 
+    return resData;
+  }
+
+  // For self signed certs set NODE_TLS_REJECT_UNAUTHORIZED=0
+  async httpReq(
+    origin: string,
+    path: string,
+    reqOptions?: HttpReqOptions,
+  ): Promise<HttpReqResponse> {
+    this.trace("httpReq for origin (%s) path (%s)", origin, path);
+
+    // Set the default values
+    let options = {
+      method: <HttpReqMethod>"GET",
+      headers: {},
+      timeout: 0,
+      keepalive: true,
+      handleResponse: true,
+      cache: <RequestCache>"no-store",
+      mode: <RequestMode>"cors",
+      credentials: <RequestCredentials>"include",
+      redirect: <RequestRedirect>"follow",
+      referrerPolicy: <ReferrerPolicy>"no-referrer",
+
+      ...reqOptions,
+    };
+
+    // If a bearer token is provided then add a Bearer auth header
+    if (options.bearerToken !== undefined) {
+      options.headers.Authorization = `Bearer ${options.bearerToken}`;
+    }
+
+    // If the basic auth creds are provided add a Basic auth header
+    if (options.auth !== undefined) {
+      let token = Buffer.from(
+        `${options.auth.username}:${options.auth.password}`,
+      ).toString("base64");
+      options.headers.Authorization = `Basic ${token}`;
+    }
+
+    let payloadBody: string | undefined;
+
+    // Automatically stringify and set the header if this is a JSON payload
+    // BUT dont do it for GETs and DELETE since they can have no body
+    if (
+      options.body !== undefined &&
+      options.method !== "GET" &&
+      options.method !== "DELETE"
+    ) {
+      // Rem an array is an object to!
+      if (typeof options.body === "object") {
+        // Add the content-type if it hasn't been provided
+        if (options.headers?.["content-type"] === undefined) {
+          options.headers["content-type"] = "application/json; charset=utf-8";
+        }
+
+        payloadBody = JSON.stringify(options.body);
+      } else {
+        payloadBody = options.body;
+      }
+    }
+
+    // Call fetch
+    let results = await this.callFetch(origin, path, options, payloadBody);
+
+    let body: any;
+    let res: Response | undefined;
+
+    // Check if we should handle the response for the user
+    if (options.handleResponse) {
+      body = await this.handleHttpReqResponseData(results);
+    } else {
+      res = results;
+    }
+
     return {
       statusCode: results.status,
       headers: results.headers,
-      body: resData,
+      body,
+      res,
     };
   }
 }
