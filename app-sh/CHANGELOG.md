@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.9.0
+
+### Minor Changes
+
+- Now using headers.has() to check if the "content-length" header exists
+
 ## 1.8.0
 
 ### Minor Changes

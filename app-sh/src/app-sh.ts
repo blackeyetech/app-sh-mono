@@ -589,7 +589,7 @@ export class AppSh {
     // and is not "0" (no need to convert to a number)
     let contentExists = false;
     if (
-      results.headers.get("content-length") !== undefined &&
+      results.headers.has("content-length") &&
       results.headers.get("content-length") !== "0"
     ) {
       contentExists = true;
