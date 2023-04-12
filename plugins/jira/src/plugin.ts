@@ -590,27 +590,7 @@ export class Jira extends AppShPlugin {
     );
   }
 
-  public async runJql(jql: string): Promise<any[]> {
-    let res = await this.httpReq(
-      this._server,
-      `${JiraResources.search}?jql=${encodeURI(jql)}`,
-      {
-        method: "GET",
-        headers:
-          this._sessionId === null
-            ? this._basicAuthHeader
-            : this._sessionHeader,
-      },
-    );
-
-    if (res === undefined) {
-      return [];
-    }
-
-    return res.body.issues;
-  }
-
-  public async jqlGetAll(jql: string): Promise<string[]> {
+  public async runJql(jql: string): Promise<string[]> {
     let issues: string[] = [];
     let startAt = 0;
     let maxResults = 1000; // 1000 is the max you can get
@@ -623,7 +603,7 @@ export class Jira extends AppShPlugin {
             ? this._basicAuthHeader
             : this._sessionHeader,
         searchParams: {
-          jql: encodeURI(jql),
+          jql,
           startAt: startAt.toString(),
           maxResults: maxResults.toString(),
           fields: "key",

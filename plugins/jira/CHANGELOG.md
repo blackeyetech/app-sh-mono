@@ -1,5 +1,11 @@
 # @app-sh/jira
 
+## 1.3.0
+
+### Minor Changes
+
+- No longer urlencoding the jql query string - URLSearchParams does that for us
+
 ## 1.2.0
 
 ### Minor Changes
