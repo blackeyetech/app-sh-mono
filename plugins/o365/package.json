@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "@app-sh/o365",
   "description": "App Shell plugin for Office 365",
   "exports": {
@@ -44,6 +44,6 @@
     "@microsoft/microsoft-graph-types": "^2.26.0"
   },
   "dependencies": {
-    "app-sh": "workspace:^1.6.0"
+    "app-sh": "workspace:^1.10.0"
   }
 }

@@ -49,25 +49,25 @@ importers:
 
   plugins/jira:
     specifiers:
-      app-sh: workspace:^1.9.0
+      app-sh: workspace:^1.10.0
     dependencies:
       app-sh: link:../../app-sh
 
   plugins/ldap:
     specifiers:
       "@types/ldapjs": ^2.2.5
-      app-sh: workspace:^1.6.0
-      ldapjs: ^3.0.1
+      app-sh: workspace:^1.10.0
+      ldapjs: ^3.0.2
     dependencies:
       app-sh: link:../../app-sh
-      ldapjs: 3.0.1
+      ldapjs: 3.0.2
     devDependencies:
       "@types/ldapjs": 2.2.5
 
   plugins/o365:
     specifiers:
       "@microsoft/microsoft-graph-types": ^2.26.0
-      app-sh: workspace:^1.6.0
+      app-sh: workspace:^1.10.0
     dependencies:
       app-sh: link:../../app-sh
     devDependencies:
@@ -76,18 +76,18 @@ importers:
   plugins/postgresql:
     specifiers:
       "@types/pg": ^8.6.6
-      app-sh: workspace:^1.6.0
-      pg: ^8.9.0
+      app-sh: workspace:^1.10.0
+      pg: ^8.10.0
     dependencies:
       app-sh: link:../../app-sh
-      pg: 8.9.0
+      pg: 8.10.0
     devDependencies:
       "@types/pg": 8.6.6
 
   plugins/sql-server:
     specifiers:
       "@types/mssql": ^8.1.2
-      app-sh: workspace:^1.6.0
+      app-sh: workspace:^1.10.0
       mssql: ^9.1.1
     dependencies:
       app-sh: link:../../app-sh
@@ -127,19 +127,19 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@azure/core-client/1.7.1:
+  /@azure/core-client/1.7.2:
     resolution:
       {
-        integrity: sha512-85igXpc5V7ns6rvMEpLmIcBDftjUgTWD+0tmYPyQEfPfkAwpPTs1X5rhCDsfqvUZGA8Ksid1hdZGu62r6XXeHg==,
+        integrity: sha512-ye5554gnVnXdfZ64hptUtETgacXoRWxYv1JF5MctoAzTSH5dXhDPZd9gOjDPyWMcLIk58pnP5+p5vGX6PYn1ag==,
       }
     engines: { node: ">=14.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
       "@azure/core-auth": 1.4.0
-      "@azure/core-rest-pipeline": 1.10.1
+      "@azure/core-rest-pipeline": 1.10.3
       "@azure/core-tracing": 1.0.1
-      "@azure/core-util": 1.1.1
-      "@azure/logger": 1.0.3
+      "@azure/core-util": 1.3.0
+      "@azure/logger": 1.0.4
       tslib: 2.5.0
     transitivePeerDependencies:
       - supports-color
@@ -153,21 +153,22 @@ packages:
     engines: { node: ">=12.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
-      "@azure/core-client": 1.7.1
-      "@azure/core-rest-pipeline": 1.10.1
+      "@azure/core-client": 1.7.2
+      "@azure/core-rest-pipeline": 1.10.3
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /@azure/core-lro/2.5.1:
+  /@azure/core-lro/2.5.2:
     resolution:
       {
-        integrity: sha512-JHQy/bA3NOz2WuzOi5zEk6n/TJdAropupxUT521JIJvW7EXV2YN2SFYZrf/2RHeD28QAClGdynYadZsbmP+nyQ==,
+        integrity: sha512-tucUutPhBwCPu6v16KEFYML81npEL6gnT+iwewXvK5ZD55sr0/Vw2jfQETMiKVeARRrXHB2QQ3SpxxGi1zAUWg==,
       }
     engines: { node: ">=14.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
-      "@azure/logger": 1.0.3
+      "@azure/core-util": 1.3.0
+      "@azure/logger": 1.0.4
       tslib: 2.5.0
     dev: false
 
@@ -181,23 +182,22 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@azure/core-rest-pipeline/1.10.1:
+  /@azure/core-rest-pipeline/1.10.3:
     resolution:
       {
-        integrity: sha512-Kji9k6TOFRDB5ZMTw8qUf2IJ+CeJtsuMdAHox9eqpTf1cefiNMpzrfnF6sINEBZJsaVaWgQ0o48B6kcUH68niA==,
+        integrity: sha512-AMQb0ttiGJ0MIV/r+4TVra6U4+90mPeOveehFnrqKlo7dknPJYdJ61wOzYJXJjDxF8LcCtSogfRelkq+fCGFTw==,
       }
     engines: { node: ">=14.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
       "@azure/core-auth": 1.4.0
       "@azure/core-tracing": 1.0.1
-      "@azure/core-util": 1.1.1
-      "@azure/logger": 1.0.3
+      "@azure/core-util": 1.3.0
+      "@azure/logger": 1.0.4
       form-data: 4.0.0
       http-proxy-agent: 5.0.0
       https-proxy-agent: 5.0.1
       tslib: 2.5.0
-      uuid: 8.3.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -212,12 +212,12 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@azure/core-util/1.1.1:
+  /@azure/core-util/1.3.0:
     resolution:
       {
-        integrity: sha512-A4TBYVQCtHOigFb2ETiiKFDocBoI1Zk2Ui1KpI42aJSIDexF7DHQFpnjonltXAIU/ceH+1fsZAWWgvX6/AKzog==,
+        integrity: sha512-ANP0Er7R2KHHHjwmKzPF9wbd0gXvOX7yRRHeYL1eNd/OaNrMLyfZH/FQasHRVAf6rMXX+EAUpvYwLMFDHDI5Gw==,
       }
-    engines: { node: ">=12.0.0" }
+    engines: { node: ">=14.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
       tslib: 2.5.0
@@ -232,14 +232,14 @@ packages:
     dependencies:
       "@azure/abort-controller": 1.1.0
       "@azure/core-auth": 1.4.0
-      "@azure/core-client": 1.7.1
-      "@azure/core-rest-pipeline": 1.10.1
+      "@azure/core-client": 1.7.2
+      "@azure/core-rest-pipeline": 1.10.3
       "@azure/core-tracing": 1.0.1
-      "@azure/core-util": 1.1.1
-      "@azure/logger": 1.0.3
-      "@azure/msal-browser": 2.33.0
+      "@azure/core-util": 1.3.0
+      "@azure/logger": 1.0.4
+      "@azure/msal-browser": 2.35.0
       "@azure/msal-common": 7.6.0
-      "@azure/msal-node": 1.15.0
+      "@azure/msal-node": 1.17.0
       events: 3.3.0
       jws: 4.0.0
       open: 8.4.2
@@ -250,52 +250,52 @@ packages:
       - supports-color
     dev: false
 
-  /@azure/keyvault-keys/4.6.0:
+  /@azure/keyvault-keys/4.7.0:
     resolution:
       {
-        integrity: sha512-0112LegxeR03L8J4k+q6HwBVvrpd9y+oInG0FG3NaHXN7YUubVBon/eb5jFI6edGrvNigpxSR0XIsprFXdkzCQ==,
+        integrity: sha512-HScWdORbRCKi1vdKI6EChe/t/P/zV7jcGZWfj18BOyeensk5d1/Ynfx1t6xfAy5zUIQvAWVU97hXdCznDpULbQ==,
       }
-    engines: { node: ">=12.0.0" }
+    engines: { node: ">=14.0.0" }
     dependencies:
       "@azure/abort-controller": 1.1.0
       "@azure/core-auth": 1.4.0
-      "@azure/core-client": 1.7.1
+      "@azure/core-client": 1.7.2
       "@azure/core-http-compat": 1.3.0
-      "@azure/core-lro": 2.5.1
+      "@azure/core-lro": 2.5.2
       "@azure/core-paging": 1.5.0
-      "@azure/core-rest-pipeline": 1.10.1
+      "@azure/core-rest-pipeline": 1.10.3
       "@azure/core-tracing": 1.0.1
-      "@azure/core-util": 1.1.1
-      "@azure/logger": 1.0.3
+      "@azure/core-util": 1.3.0
+      "@azure/logger": 1.0.4
       tslib: 2.5.0
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /@azure/logger/1.0.3:
+  /@azure/logger/1.0.4:
     resolution:
       {
-        integrity: sha512-aK4s3Xxjrx3daZr3VylxejK3vG5ExXck5WOHDJ8in/k9AqlfIyFMMT1uG7u8mNjX+QRILTIn0/Xgschfh/dQ9g==,
+        integrity: sha512-ustrPY8MryhloQj7OWGe+HrYx+aoiOxzbXTtgblbV3xwCqpzUK36phH3XNHQKj3EPonyFUuDTfR3qFhTEAuZEg==,
       }
-    engines: { node: ">=12.0.0" }
+    engines: { node: ">=14.0.0" }
     dependencies:
       tslib: 2.5.0
     dev: false
 
-  /@azure/msal-browser/2.33.0:
+  /@azure/msal-browser/2.35.0:
     resolution:
       {
-        integrity: sha512-c7CVh1tfUfxiWkEIhoIb11hL4PGo4hz0M+gMy34ATagAKdLK7qyEu/5AXJWAf5lz5eE+vQhm7+LKiuETrcXXGw==,
+        integrity: sha512-L+gSBbJfU3H81Bnj+VIVjO7jRpt2Ex+4i2YVOPE50ykfQ5W9mtBFMRCHb1K+8FzTeyQH/KkQv6bC+MdaU+3LEw==,
       }
     engines: { node: ">=0.8.0" }
     dependencies:
-      "@azure/msal-common": 10.0.0
+      "@azure/msal-common": 12.0.0
     dev: false
 
-  /@azure/msal-common/10.0.0:
+  /@azure/msal-common/12.0.0:
     resolution:
       {
-        integrity: sha512-/LghpT93jsZLy55QzTsRZWMx6R1Mjc1Aktwps8sKSGE3WbrGwbSsh2uhDlpl6FMcKChYjJ0ochThWwwOodrQNg==,
+        integrity: sha512-SvQl4JWy1yZnxyq0xng/urf103wz68UJG0K9Dq2NM2to7ePA+R1hMisKnXELJvZrEGYANGbh/Hc0T9piGqOteQ==,
       }
     engines: { node: ">=0.8.0" }
     dev: false
@@ -308,14 +308,14 @@ packages:
     engines: { node: ">=0.8.0" }
     dev: false
 
-  /@azure/msal-node/1.15.0:
+  /@azure/msal-node/1.17.0:
     resolution:
       {
-        integrity: sha512-fwC5M0c8pxOAzmScPbpx7j28YVTDebUaizlVF7bR0xvlU0r3VWW5OobCcr9ybqKS6wGyO7u4EhXJS9rjRWAuwA==,
+        integrity: sha512-aOKykKxDc+Kf5vcdOUPdKlJ96YAIyrHyl4W8RyfMqw0iApDckOuhejNwlZr6/M7U40wo1Wj4PwxRVx7d8OFBFg==,
       }
     engines: { node: 10 || 12 || 14 || 16 || 18 }
     dependencies:
-      "@azure/msal-common": 10.0.0
+      "@azure/msal-common": 12.0.0
       jsonwebtoken: 9.0.0
       uuid: 8.3.2
     dev: false
@@ -681,10 +681,10 @@ packages:
       "@jridgewell/sourcemap-codec": 1.4.15
     dev: true
 
-  /@js-joda/core/5.5.2:
+  /@js-joda/core/5.5.3:
     resolution:
       {
-        integrity: sha512-retLUN4TwCJ0QJDi9OCJwYVaXAz93NeOkEtEQL98M2bykBOxmURlP0YlfsuE46kItOOVZIWRYC3KsSLhQ1R2Qw==,
+        integrity: sha512-7dqNYwG8gCt4hfg5PKgM7xLEcgSBcx/UgC92OMnhMmvAnq11QzDFPrxUkNR/u5kn17WWLZ8beZ4A3Qrz4pZcmQ==,
       }
     dev: false
 
@@ -710,7 +710,7 @@ packages:
     dependencies:
       "@ldapjs/asn1": 2.0.0
       "@ldapjs/protocol": 1.2.1
-      process-warning: 2.1.0
+      process-warning: 2.2.0
     dev: false
 
   /@ldapjs/change/1.0.0:
@@ -740,7 +740,7 @@ packages:
       }
     dependencies:
       "@ldapjs/asn1": 2.0.0
-      process-warning: 2.1.0
+      process-warning: 2.2.0
     dev: false
 
   /@ldapjs/filter/2.0.0:
@@ -751,13 +751,13 @@ packages:
     dependencies:
       "@ldapjs/asn1": 2.0.0
       "@ldapjs/protocol": 1.2.1
-      process-warning: 2.1.0
+      process-warning: 2.2.0
     dev: false
 
-  /@ldapjs/messages/1.0.1:
+  /@ldapjs/messages/1.0.2:
     resolution:
       {
-        integrity: sha512-1S/Y9QqyYTI97RJHuJqSnNTr8iXunY8KK+E0KDwNsT69X7ftxH2LIV+232/BV0KIMQ0yYTxroQAIdYmWTni1IA==,
+        integrity: sha512-aVYyqTDsIfnUt2Qr2syJi99M39h4ll9soggOtUjsf4Sv1xVQ/M5VY11T0h69S2fQ4NnaYi9iXd440LVU4MCCKQ==,
       }
     dependencies:
       "@ldapjs/asn1": 2.0.0
@@ -767,7 +767,7 @@ packages:
       "@ldapjs/dn": 1.0.0
       "@ldapjs/filter": 2.0.0
       "@ldapjs/protocol": 1.2.1
-      process-warning: 2.1.0
+      process-warning: 2.2.0
     dev: false
 
   /@ldapjs/protocol/1.2.1:
@@ -1016,7 +1016,7 @@ packages:
         integrity: sha512-Lv/nD6QDCmcT+V1vaTRnEKE8UgOilVv5pHcQuzkU1LcRe4mbHHuUo/KHi0LKrpdHhQY8FJzryF38fcVdeUIrzg==,
       }
     dependencies:
-      "@types/node": 18.14.0
+      "@types/node": 18.15.11
     dev: true
 
   /@types/minimist/1.2.2:
@@ -1032,7 +1032,7 @@ packages:
         integrity: sha512-hoDM+mZUClfXu0J1pyVdbhv2Ve0dl0TdagAE3M5rd1slqoVEEHuNObPD+giwtJgyo99CcS58qbF9ektVKdxSfQ==,
       }
     dependencies:
-      "@types/node": 18.14.0
+      "@types/node": 18.15.11
       "@types/tedious": 4.0.9
       tarn: 3.0.2
     dev: true
@@ -1041,13 +1041,6 @@ packages:
     resolution:
       {
         integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==,
-      }
-    dev: true
-
-  /@types/node/18.14.0:
-    resolution:
-      {
-        integrity: sha512-5EWrvLmglK+imbCJY0+INViFWUHg1AHel1sq4ZVSfdcNqGy9Edv3UB9IIzzg+xPaUcAgZYcfVs2fBcwDeZzU0A==,
       }
     dev: true
 
@@ -1070,7 +1063,7 @@ packages:
         integrity: sha512-O2xNmXebtwVekJDD+02udOncjVcMZQuTEQEMpKJ0ZRf5E7/9JJX3izhKUcUifBkyKpljyUM6BTgy2trmviKlpw==,
       }
     dependencies:
-      "@types/node": 18.14.0
+      "@types/node": 18.15.11
       pg-protocol: 1.6.0
       pg-types: 2.2.0
     dev: true
@@ -1095,7 +1088,7 @@ packages:
         integrity: sha512-ipwFvfy9b2m0gjHsIX0D6NAAwGCKokzf5zJqUZHUGt+7uWVlBIy6n2eyMgiKQ8ChLFVxic/zwQUhjLYNzbHDRA==,
       }
     dependencies:
-      "@types/node": 18.14.0
+      "@types/node": 18.15.11
     dev: true
 
   /abstract-logging/2.0.1:
@@ -1340,7 +1333,7 @@ packages:
     dependencies:
       buffer: 6.0.3
       inherits: 2.0.4
-      readable-stream: 3.6.0
+      readable-stream: 3.6.2
     dev: false
 
   /brace-expansion/2.0.1:
@@ -1872,48 +1865,6 @@ packages:
       is-arrayish: 0.2.1
     dev: true
 
-  /es-abstract/1.21.1:
-    resolution:
-      {
-        integrity: sha512-QudMsPOz86xYz/1dG1OuGBKOELjCh99IIWHLzy5znUB6j8xG2yMA7bfTV86VSqKF+Y/H08vQPR+9jyXpuC6hfg==,
-      }
-    engines: { node: ">= 0.4" }
-    dependencies:
-      available-typed-arrays: 1.0.5
-      call-bind: 1.0.2
-      es-set-tostringtag: 2.0.1
-      es-to-primitive: 1.2.1
-      function-bind: 1.1.1
-      function.prototype.name: 1.1.5
-      get-intrinsic: 1.2.0
-      get-symbol-description: 1.0.0
-      globalthis: 1.0.3
-      gopd: 1.0.1
-      has: 1.0.3
-      has-property-descriptors: 1.0.0
-      has-proto: 1.0.1
-      has-symbols: 1.0.3
-      internal-slot: 1.0.5
-      is-array-buffer: 3.0.1
-      is-callable: 1.2.7
-      is-negative-zero: 2.0.2
-      is-regex: 1.1.4
-      is-shared-array-buffer: 1.0.2
-      is-string: 1.0.7
-      is-typed-array: 1.1.10
-      is-weakref: 1.0.2
-      object-inspect: 1.12.3
-      object-keys: 1.1.1
-      object.assign: 4.1.4
-      regexp.prototype.flags: 1.4.3
-      safe-regex-test: 1.0.0
-      string.prototype.trimend: 1.0.6
-      string.prototype.trimstart: 1.0.6
-      typed-array-length: 1.0.4
-      unbox-primitive: 1.0.2
-      which-typed-array: 1.1.9
-    dev: false
-
   /es-abstract/1.21.2:
     resolution:
       {
@@ -1964,7 +1915,7 @@ packages:
     engines: { node: ">= 0.4" }
     dependencies:
       define-properties: 1.2.0
-      es-abstract: 1.21.1
+      es-abstract: 1.21.2
       function-bind: 1.1.1
       functions-have-names: 1.2.3
       get-intrinsic: 1.2.0
@@ -2542,17 +2493,6 @@ packages:
       has: 1.0.3
       side-channel: 1.0.4
 
-  /is-array-buffer/3.0.1:
-    resolution:
-      {
-        integrity: sha512-ASfLknmY8Xa2XtB4wmbz13Wu202baeA18cJBCeCy0wXUHZF0IPyVEXqKEcd+t2fNSLLL1vC6k7lxZEojNbISXQ==,
-      }
-    dependencies:
-      call-bind: 1.0.2
-      get-intrinsic: 1.2.0
-      is-typed-array: 1.1.10
-    dev: false
-
   /is-array-buffer/3.0.2:
     resolution:
       {
@@ -2880,7 +2820,7 @@ packages:
       jws: 3.2.2
       lodash: 4.17.21
       ms: 2.1.3
-      semver: 7.3.8
+      semver: 7.4.0
     dev: false
 
   /jwa/1.4.1:
@@ -2941,10 +2881,10 @@ packages:
     engines: { node: ">=6" }
     dev: true
 
-  /ldapjs/3.0.1:
+  /ldapjs/3.0.2:
     resolution:
       {
-        integrity: sha512-/bOFimHRBBMalpApgBeDNBTdQcK9wf9OCpZ3jloqJ9EPnSqCpKbGJ8cp81qHMfjlodpq8V9zgJTqWZ0/Bv/eUg==,
+        integrity: sha512-EBxQaBmgXk1DEaYYJWkp5i5PtSLRI2CWtm1gzxG5buOt40Q7j3zY6MbpRDkach/Cnxr3qSyLHiyXvvkLCOXw+Q==,
       }
     dependencies:
       "@ldapjs/asn1": 2.0.0
@@ -2953,7 +2893,7 @@ packages:
       "@ldapjs/controls": 2.0.0
       "@ldapjs/dn": 1.0.0
       "@ldapjs/filter": 2.0.0
-      "@ldapjs/messages": 1.0.1
+      "@ldapjs/messages": 1.0.2
       "@ldapjs/protocol": 1.2.1
       abstract-logging: 2.0.1
       assert-plus: 1.0.0
@@ -3578,15 +3518,15 @@ packages:
       }
     engines: { node: ">=4.0.0" }
 
-  /pg-pool/3.5.2_pg@8.9.0:
+  /pg-pool/3.6.0_pg@8.10.0:
     resolution:
       {
-        integrity: sha512-His3Fh17Z4eg7oANLob6ZvH8xIVen3phEZh2QuyrIl4dQSDVEabNducv6ysROKpDNPSD+12tONZVWfSgMvDD9w==,
+        integrity: sha512-clFRf2ksqd+F497kWFyM21tMjeikn60oGDmqMT8UBrynEwVEX/5R5xd2sdvdo1cZCFlguORNpVuqxIj+aK4cfQ==,
       }
     peerDependencies:
       pg: ">=8.0"
     dependencies:
-      pg: 8.9.0
+      pg: 8.10.0
     dev: false
 
   /pg-protocol/1.6.0:
@@ -3608,10 +3548,10 @@ packages:
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
 
-  /pg/8.9.0:
+  /pg/8.10.0:
     resolution:
       {
-        integrity: sha512-ZJM+qkEbtOHRuXjmvBtOgNOXOtLSbxiMiUVMgE4rV6Zwocy03RicCVvDXgx8l4Biwo8/qORUnEqn2fdQzV7KCg==,
+        integrity: sha512-ke7o7qSTMb47iwzOSaZMfeR7xToFdkE71ifIipOAAaLIM0DYzfOAXlgFFmYUIE2BcJtvnVlGCID84ZzCegE8CQ==,
       }
     engines: { node: ">= 8.0.0" }
     peerDependencies:
@@ -3623,7 +3563,7 @@ packages:
       buffer-writer: 2.0.0
       packet-reader: 1.0.0
       pg-connection-string: 2.5.0
-      pg-pool: 3.5.2_pg@8.9.0
+      pg-pool: 3.6.0_pg@8.10.0
       pg-protocol: 1.6.0
       pg-types: 2.2.0
       pgpass: 1.0.5
@@ -3635,7 +3575,7 @@ packages:
         integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==,
       }
     dependencies:
-      split2: 4.1.0
+      split2: 4.2.0
     dev: false
 
   /picomatch/2.3.1:
@@ -3732,10 +3672,10 @@ packages:
     hasBin: true
     dev: true
 
-  /process-warning/2.1.0:
+  /process-warning/2.2.0:
     resolution:
       {
-        integrity: sha512-9C20RLxrZU/rFnxWncDkuF6O999NdIf3E1ws4B0ZeY3sRVPzWBMsYDE2lxjxhiXxg464cQTgKUGm8/i6y2YGXg==,
+        integrity: sha512-/1WZ8+VQjR6avWOgHeEPd7SDQmFQ1B5mC1eRXsCm5TarlNmx/wCsa5GEaxGm05BORRtyG/Ex/3xq3TuRvq57qg==,
       }
     dev: false
 
@@ -3816,10 +3756,10 @@ packages:
       strip-bom: 3.0.0
     dev: true
 
-  /readable-stream/3.6.0:
+  /readable-stream/3.6.2:
     resolution:
       {
-        integrity: sha512-BViHy7LKeTz4oNnkcLJ+lVSL6vpiFeX6/d3oSH8zCW7UxP2onchk+vTGB143xuFjHS3deTgkKoXXymXqymiIdA==,
+        integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==,
       }
     engines: { node: ">= 6" }
     dependencies:
@@ -4012,10 +3952,10 @@ packages:
     hasBin: true
     dev: true
 
-  /semver/7.3.8:
+  /semver/7.4.0:
     resolution:
       {
-        integrity: sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==,
+        integrity: sha512-RgOxM8Mw+7Zus0+zcLEUn8+JfoLpj/huFTItQy2hsM4khuC1HYRDp0cU482Ewn/Fcy6bCjufD8vAj7voC66KQw==,
       }
     engines: { node: ">=10" }
     hasBin: true
@@ -4231,10 +4171,10 @@ packages:
       }
     dev: true
 
-  /split2/4.1.0:
+  /split2/4.2.0:
     resolution:
       {
-        integrity: sha512-VBiJxFkxiXRlUIeyMQi8s4hgvKCSjtknJv/LVYbrgALPwf5zSKmEwV9Lst25AkvMDnvxODugjdl6KZgwKM1WYQ==,
+        integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==,
       }
     engines: { node: ">= 10.x" }
     dev: false
@@ -4429,8 +4369,8 @@ packages:
     engines: { node: ">=14" }
     dependencies:
       "@azure/identity": 2.1.0
-      "@azure/keyvault-keys": 4.6.0
-      "@js-joda/core": 5.5.2
+      "@azure/keyvault-keys": 4.7.0
+      "@js-joda/core": 5.5.3
       bl: 5.1.0
       es-aggregate-error: 1.0.9
       iconv-lite: 0.6.3

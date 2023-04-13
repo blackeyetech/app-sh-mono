@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.3.1",
   "name": "@app-sh/jira",
   "description": "App Shell plugin for JIRA",
   "exports": {
@@ -40,6 +40,6 @@
     "access": "public"
   },
   "dependencies": {
-    "app-sh": "workspace:^1.9.0"
+    "app-sh": "workspace:^1.10.0"
   }
 }

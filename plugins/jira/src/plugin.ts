@@ -1,9 +1,6 @@
 // imports here
 import { AppSh, AppShPlugin, AppShConfig, HttpReqResponse } from "app-sh";
 
-import * as fs from "node:fs";
-import * as https from "node:https";
-
 // Types here
 export type AuthDetails = {
   username: string;

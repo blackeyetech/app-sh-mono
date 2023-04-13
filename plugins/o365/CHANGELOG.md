@@ -1,5 +1,11 @@
 # @app-sh/o365
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated app-sh version in plugins
+
 ## 1.1.0
 
 ### Minor Changes
