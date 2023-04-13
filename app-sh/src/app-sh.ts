@@ -63,7 +63,7 @@ export type HttpReqResponse = {
   statusCode: number;
   headers: Headers;
   body: any;
-  res?: Response;
+  response?: Response;
 };
 
 export type HttpReqMethod =
@@ -642,24 +642,25 @@ export class AppSh {
     }
 
     // Call fetch
-    let results = await this.callFetch(origin, path, options, payloadBody);
+    let response = await this.callFetch(origin, path, options, payloadBody);
 
-    let body: any;
-    let res: Response | undefined;
+    // Build the response
+    let httpReqRes: HttpReqResponse = {
+      statusCode: response.status,
+      headers: response.headers,
+      body: undefined, // set to undefined for now
+    };
 
     // Check if we should handle the response for the user
     if (options.handleResponse) {
-      body = await this.handleHttpReqResponseData(results);
+      // Yes, so handle and set the body
+      httpReqRes.body = await this.handleHttpReqResponseData(response);
     } else {
-      res = results;
+      // No, so set the response
+      httpReqRes.response = response;
     }
 
-    return {
-      statusCode: results.status,
-      headers: results.headers,
-      body,
-      res,
-    };
+    return httpReqRes;
   }
 }
 

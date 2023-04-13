@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.10.0
+
+### Minor Changes
+
+- httpReq can now return the fetch response instead of processing it
+
 ## 1.9.0
 
 ### Minor Changes
