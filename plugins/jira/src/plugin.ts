@@ -830,34 +830,4 @@ export class Jira extends AppShPlugin {
 
     return res;
   }
-
-  public async getAttachment(
-    attachment: string,
-    path: string,
-  ): Promise<boolean> {
-    const options = {
-      headers:
-        this._sessionId === null ? this._basicAuthHeader : this._sessionHeader,
-    };
-
-    const file = fs.createWriteStream(path);
-
-    let success = false;
-
-    https
-      .get(`${this._server}/${attachment}`, options, (res) => {
-        res.pipe(file);
-        file.on("finish", () => {
-          file.close(() => {
-            console.log("File downloaded successfully!");
-            success = true;
-          });
-        });
-      })
-      .on("error", (err) => {
-        console.error(`Error downloading file: ${err.message}`);
-      });
-
-    return success;
-  }
 }
