@@ -1,5 +1,11 @@
 # app-sh
 
+## 1.11.0
+
+### Minor Changes
+
+- Added a getCookie method to HttpMan
+
 ## 1.10.0
 
 ### Minor Changes
