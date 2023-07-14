@@ -2,4 +2,4 @@
 
 This is a mono repo for the Black Eye Tech App Shell ecosystem.
 
-See each package for more details.
+See each package for more details!
